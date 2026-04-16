@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>النظام المحاسبي المتكامل - الإصدار الاحترافي</title>
+    <title>النظام المحاسبي الاحترافي - قوائم مالية كاملة</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -12,243 +12,91 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Tajawal', sans-serif; background: #f0f2f5; direction: rtl; overflow-x: hidden; }
-        
-        /* شاشة تسجيل الدخول */
         .login-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(135deg, #0d47a1, #1976d2, #42a5f5);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 2000;
+            display: flex; justify-content: center; align-items: center; z-index: 2000;
         }
         .login-card {
-            background: white;
-            padding: 40px;
-            border-radius: 20px;
-            width: 90%;
-            max-width: 420px;
-            text-align: center;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            animation: fadeInUp 0.5s ease;
+            background: white; padding: 40px; border-radius: 20px; width: 90%; max-width: 420px;
+            text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3); animation: fadeInUp 0.5s ease;
         }
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .login-card h2 { color: #0d47a1; margin-bottom: 10px; }
-        .login-card .subtitle { color: #666; margin-bottom: 25px; font-size: 14px; }
-        .login-card input {
-            width: 100%;
-            padding: 14px;
-            margin: 10px 0;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            font-family: 'Tajawal', sans-serif;
-            font-size: 16px;
-        }
-        .login-card button {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #0d47a1, #1976d2);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 18px;
-            cursor: pointer;
-            margin-top: 15px;
-            font-weight: bold;
-        }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        .login-card input { width: 100%; padding: 14px; margin: 10px 0; border: 1px solid #ddd; border-radius: 10px; font-family: 'Tajawal', sans-serif; }
+        .login-card button { width: 100%; padding: 14px; background: linear-gradient(135deg, #0d47a1, #1976d2); color: white; border: none; border-radius: 10px; font-size: 18px; cursor: pointer; font-weight: bold; }
         .error-msg { color: #dc3545; margin-top: 10px; display: none; }
-        .demo-users { margin-top: 20px; font-size: 12px; color: #666; border-top: 1px solid #eee; padding-top: 15px; }
-        .demo-users span { display: inline-block; background: #e3f2fd; padding: 3px 8px; border-radius: 5px; margin: 3px; }
-        
-        /* الواجهة الرئيسية */
         .top-navbar {
-            background: linear-gradient(135deg, #0d47a1, #1976d2);
-            color: white;
-            padding: 12px 25px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            background: linear-gradient(135deg, #0d47a1, #1976d2); color: white; padding: 12px 25px;
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;
+            position: sticky; top: 0; z-index: 1000;
         }
         .logo { font-size: 22px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
-        .logo i { font-size: 28px; color: #ffc107; }
         .user-info { display: flex; align-items: center; gap: 15px; }
-        .user-info span { background: rgba(255,255,255,0.2); padding: 6px 15px; border-radius: 25px; font-size: 14px; }
-        .logout-btn { background: #dc3545; border: none; padding: 6px 18px; border-radius: 25px; color: white; cursor: pointer; font-weight: bold; }
-        
+        .logout-btn { background: #dc3545; border: none; padding: 6px 18px; border-radius: 25px; color: white; cursor: pointer; }
         .sidebar {
-            position: fixed;
-            right: 0;
-            top: 60px;
-            width: 280px;
-            height: calc(100% - 60px);
-            background: white;
-            overflow-y: auto;
-            z-index: 999;
-            box-shadow: -2px 0 20px rgba(0,0,0,0.05);
+            position: fixed; right: 0; top: 60px; width: 280px; height: calc(100% - 60px);
+            background: white; overflow-y: auto; z-index: 999; box-shadow: -2px 0 20px rgba(0,0,0,0.05);
             transition: all 0.3s;
         }
         .sidebar-item {
-            padding: 14px 22px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            cursor: pointer;
-            border-right: 3px solid transparent;
-            transition: all 0.2s;
-            font-size: 15px;
+            padding: 14px 22px; display: flex; align-items: center; gap: 12px; cursor: pointer;
+            border-right: 3px solid transparent; transition: all 0.2s;
         }
-        .sidebar-item:hover, .sidebar-item.active {
-            background: #e3f2fd;
-            border-right-color: #1976d2;
-            color: #1976d2;
-        }
-        .sidebar-item i { width: 24px; font-size: 18px; }
-        .sidebar-category {
-            padding: 12px 22px;
-            font-size: 12px;
-            color: #888;
-            font-weight: bold;
-            border-top: 1px solid #eee;
-            margin-top: 5px;
-        }
+        .sidebar-item:hover, .sidebar-item.active { background: #e3f2fd; border-right-color: #1976d2; color: #1976d2; }
+        .sidebar-category { padding: 12px 22px; font-size: 12px; color: #888; font-weight: bold; border-top: 1px solid #eee; }
         .main-content { margin-right: 280px; padding: 25px; min-height: 100vh; }
-        .card {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 25px;
-            box-shadow: 0 2px 15px rgba(0,0,0,0.08);
-            transition: transform 0.2s;
-        }
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #e0e0e0;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
+        .card { background: white; border-radius: 15px; padding: 25px; margin-bottom: 25px; box-shadow: 0 2px 15px rgba(0,0,0,0.08); }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #e0e0e0; flex-wrap: wrap; gap: 10px; }
         .card-header h3 { color: #0d47a1; font-size: 20px; }
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 20px;
-            margin-bottom: 25px;
-        }
-        .stat-card {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            padding: 20px;
-            border-radius: 15px;
-            text-align: center;
-            transition: transform 0.2s;
-        }
-        .stat-card:hover { transform: translateY(-3px); }
-        .stat-card i { font-size: 35px; margin-bottom: 10px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 25px; }
+        .stat-card { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 20px; border-radius: 15px; text-align: center; }
         .stat-card .number { font-size: 28px; font-weight: 800; }
-        .stat-card .label { font-size: 13px; opacity: 0.9; }
         table { width: 100%; border-collapse: collapse; }
         th, td { border: 1px solid #e0e0e0; padding: 12px; text-align: center; }
-        th { background: linear-gradient(135deg, #0d47a1, #1976d2); color: white; font-weight: 600; }
-        tr:hover { background: #f5f5f5; }
+        th { background: linear-gradient(135deg, #0d47a1, #1976d2); color: white; }
         .form-row { display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 15px; }
         .form-group { flex: 1; min-width: 180px; }
-        label { display: block; margin-bottom: 8px; font-weight: 600; color: #333; }
-        input, select, textarea {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            font-family: 'Tajawal', sans-serif;
-            transition: 0.2s;
-        }
-        input:focus, select:focus { border-color: #1976d2; outline: none; }
-        button {
-            background: linear-gradient(135deg, #0d47a1, #1976d2);
-            color: white;
-            border: none;
-            padding: 10px 25px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-family: 'Tajawal', sans-serif;
-            font-weight: 600;
-            transition: 0.2s;
-        }
-        button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        label { display: block; margin-bottom: 8px; font-weight: 600; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-family: 'Tajawal', sans-serif; }
+        button { background: linear-gradient(135deg, #0d47a1, #1976d2); color: white; border: none; padding: 10px 25px; border-radius: 10px; cursor: pointer; font-weight: 600; transition: 0.2s; }
+        button:hover { transform: translateY(-2px); }
         .btn-danger { background: linear-gradient(135deg, #c62828, #dc3545); }
         .btn-success { background: linear-gradient(135deg, #2e7d32, #28a745); }
-        .btn-warning { background: linear-gradient(135deg, #e65100, #ff9800); color: white; }
-        .toast-message {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            background: #28a745;
-            color: white;
-            padding: 14px 28px;
-            border-radius: 50px;
-            z-index: 1100;
-            display: none;
-            font-weight: bold;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
-        }
-        .chart-container { height: 300px; margin: 20px 0; }
-        .print-hide { display: inline-block; }
-        @media print { .sidebar, .top-navbar, button, .print-hide { display: none; } .main-content { margin: 0; padding: 0; } }
+        .btn-warning { background: linear-gradient(135deg, #e65100, #ff9800); }
+        .toast-message { position: fixed; bottom: 20px; left: 20px; background: #28a745; color: white; padding: 14px 28px; border-radius: 50px; z-index: 1100; display: none; font-weight: bold; }
+        .financial-statement { direction: rtl; }
+        .statement-section { margin-bottom: 25px; }
+        .statement-title { background: #e3f2fd; padding: 10px; font-weight: bold; color: #0d47a1; margin-top: 15px; margin-bottom: 10px; border-radius: 8px; }
+        .statement-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #ddd; }
+        .statement-row.indent { margin-right: 25px; }
+        .statement-row.total { font-weight: bold; background: #ffe0b3; margin-top: 10px; padding: 10px; border-radius: 8px; }
+        .statement-row.double-total { font-weight: bold; background: #ffc107; margin-top: 15px; padding: 12px; border-radius: 8px; font-size: 1.1em; }
+        .menu-toggle { display: none; background: none; border: none; font-size: 24px; color: white; cursor: pointer; }
         @media (max-width: 768px) {
             .sidebar { transform: translateX(100%); width: 260px; }
             .sidebar.open { transform: translateX(0); }
             .main-content { margin-right: 0; }
-            .menu-toggle { display: block; background: none; color: white; font-size: 24px; }
-            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .menu-toggle { display: block; }
         }
-        .menu-toggle { display: none; background: none; border: none; font-size: 24px; color: white; cursor: pointer; }
-        .tree-item { padding: 8px; margin: 3px 0; background: #f8f9fa; border-radius: 8px; }
-        .tree-node { margin-right: 25px; }
-        .badge { background: #e3f2fd; color: #1976d2; padding: 3px 8px; border-radius: 12px; font-size: 11px; }
     </style>
 </head>
 <body>
-    <!-- شاشة تسجيل الدخول -->
     <div class="login-container" id="loginContainer">
         <div class="login-card">
-            <h2><i class="fas fa-chart-line"></i> النظام المحاسبي المتكامل</h2>
-            <div class="subtitle">إدارة الشركات باحترافية</div>
+            <h2><i class="fas fa-chart-line"></i> النظام المحاسبي الاحترافي</h2>
+            <div class="subtitle" style="color:#666; margin-bottom:20px;">قوائم مالية كاملة متعددة المستويات</div>
             <input type="text" id="loginUsername" placeholder="اسم المستخدم">
             <input type="password" id="loginPassword" placeholder="كلمة المرور">
             <button onclick="attemptLogin()"><i class="fas fa-sign-in-alt"></i> تسجيل الدخول</button>
             <div class="error-msg" id="loginError">بيانات الدخول غير صحيحة</div>
-            <div class="demo-users">
-                <strong>حسابات تجريبية:</strong><br>
-                <span>admin / 123456</span> <span>مدير كامل الصلاحيات</span><br>
-                <span>accountant / 123456</span> <span>محاسب</span><br>
-                <span>viewer / 123456</span> <span>مشاهد</span>
-            </div>
+            <div style="margin-top:20px; font-size:12px; color:#666;">admin / 123456 | accountant / 123456 | viewer / 123456</div>
         </div>
     </div>
 
-    <!-- الواجهة الرئيسية -->
     <div id="mainApp" style="display: none;">
         <div class="top-navbar">
-            <div class="logo"><i class="fas fa-landmark"></i><span>النظام المحاسبي المتكامل</span></div>
-            <div class="user-info">
-                <span id="currentUserRole"></span>
-                <span id="currentUserName"></span>
-                <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> خروج</button>
-            </div>
+            <div class="logo"><i class="fas fa-landmark"></i><span>النظام المحاسبي الاحترافي</span></div>
+            <div class="user-info"><span id="currentUserRole"></span><span id="currentUserName"></span><button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> خروج</button></div>
             <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
         </div>
 
@@ -256,34 +104,18 @@
             <div class="sidebar-category"><i class="fas fa-tachometer-alt"></i> الرئيسية</div>
             <div class="sidebar-item active" data-page="dashboard"><i class="fas fa-tachometer-alt"></i><span>لوحة التحكم</span></div>
             <div class="sidebar-item" data-page="chart-of-accounts"><i class="fas fa-tree"></i><span>شجرة الحسابات</span></div>
+            <div class="sidebar-item" data-page="add-account"><i class="fas fa-plus-circle"></i><span>إضافة حساب جديد</span></div>
             
-            <div class="sidebar-category"><i class="fas fa-book"></i> اليومية والقيد</div>
+            <div class="sidebar-category"><i class="fas fa-book"></i> اليومية</div>
             <div class="sidebar-item" data-page="journal-entry"><i class="fas fa-pen-alt"></i><span>إدخال قيد يومية</span></div>
-            <div class="sidebar-item" data-page="general-ledger"><i class="fas fa-list-alt"></i><span>دفتر الأستاذ العام</span></div>
             
-            <div class="sidebar-category"><i class="fas fa-chart-pie"></i> التقارير المالية</div>
-            <div class="sidebar-item" data-page="trial-balance"><i class="fas fa-balance-scale"></i><span>ميزان المراجعة</span></div>
+            <div class="sidebar-category"><i class="fas fa-chart-pie"></i> القوائم المالية</div>
             <div class="sidebar-item" data-page="income-statement"><i class="fas fa-chart-line"></i><span>قائمة الدخل متعددة المستويات</span></div>
-            <div class="sidebar-item" data-page="balance-sheet"><i class="fas fa-landmark"></i><span>المركز المالي</span></div>
-            <div class="sidebar-item" data-page="cash-flow"><i class="fas fa-money-bill-wave"></i><span>قائمة التدفقات النقدية</span></div>
-            <div class="sidebar-item" data-page="equity-statement"><i class="fas fa-chart-simple"></i><span>قائمة التغيرات في حقوق الملكية</span></div>
-            
-            <div class="sidebar-category"><i class="fas fa-cubes"></i> الإدارة المتقدمة</div>
-            <div class="sidebar-item" data-page="customers"><i class="fas fa-users"></i><span>إدارة العملاء والموردين</span></div>
-            <div class="sidebar-item" data-page="inventory"><i class="fas fa-boxes"></i><span>إدارة المخزون</span></div>
-            <div class="sidebar-item" data-page="fixed-assets"><i class="fas fa-building"></i><span>الأصول الثابتة والإهلاك</span></div>
-            <div class="sidebar-item" data-page="payroll"><i class="fas fa-user-tie"></i><span>إدارة الرواتب والموظفين</span></div>
-            <div class="sidebar-item" data-page="branches"><i class="fas fa-code-branch"></i><span>إدارة الفروع والشركات</span></div>
-            
-            <div class="sidebar-category"><i class="fas fa-file-alt"></i> تقارير تحليلية</div>
-            <div class="sidebar-item" data-page="financial-ratios"><i class="fas fa-calculator"></i><span>النسب المالية</span></div>
-            <div class="sidebar-item" data-page="aging-report"><i class="fas fa-clock"></i><span>تقارير الأعمار (عملاء/موردين)</span></div>
-            <div class="sidebar-item" data-page="export-reports"><i class="fas fa-file-export"></i><span>تصدير التقارير</span></div>
+            <div class="sidebar-item" data-page="balance-sheet"><i class="fas fa-landmark"></i><span>المركز المالي المفصل</span></div>
+            <div class="sidebar-item" data-page="trial-balance"><i class="fas fa-balance-scale"></i><span>ميزان المراجعة</span></div>
             
             <div class="sidebar-category"><i class="fas fa-cog"></i> الإعدادات</div>
-            <div class="sidebar-item" data-page="users"><i class="fas fa-users-cog"></i><span>إدارة المستخدمين</span></div>
-            <div class="sidebar-item" data-page="settings"><i class="fas fa-sliders-h"></i><span>إعدادات النظام</span></div>
-            <div class="sidebar-item" data-page="help"><i class="fas fa-question-circle"></i><span>دليل الاستخدام الشامل</span></div>
+            <div class="sidebar-item" data-page="help"><i class="fas fa-question-circle"></i><span>دليل الاستخدام</span></div>
         </div>
 
         <div class="main-content" id="mainContent"></div>
@@ -291,172 +123,101 @@
     <div class="toast-message" id="toastMessage"></div>
 
     <script>
-        // ====================== شجرة الحسابات الشاملة (أكثر من 120 حساب) ======================
-        const accounts = [
-            // الأصول
-            { id: 1, code: "1000", name: "الأصول", type: "asset", parent: null, isGroup: true, level: 0 },
-            { id: 2, code: "1100", name: "الأصول المتداولة", type: "asset", parent: 1, isGroup: true, level: 1 },
-            { id: 3, code: "1110", name: "الصندوق", type: "asset", parent: 2, isGroup: false, level: 2 },
-            { id: 4, code: "1120", name: "البنك (نقدية)", type: "asset", parent: 2, isGroup: false, level: 2 },
-            { id: 5, code: "1130", name: "العملاء (مدينون)", type: "asset", parent: 2, isGroup: false, level: 2 },
-            { id: 6, code: "1140", name: "أوراق قبض", type: "asset", parent: 2, isGroup: false, level: 2 },
-            { id: 7, code: "1150", name: "المخزون (بضاعة)", type: "asset", parent: 2, isGroup: false, level: 2 },
-            { id: 8, code: "1160", name: "مصروفات مقدمة", type: "asset", parent: 2, isGroup: false, level: 2 },
-            { id: 9, code: "1170", name: "إيرادات مستحقة", type: "asset", parent: 2, isGroup: false, level: 2 },
-            { id: 10, code: "1180", name: "شيكات تحت التحصيل", type: "asset", parent: 2, isGroup: false, level: 2 },
-            { id: 11, code: "1190", name: "الاستثمارات قصيرة الأجل", type: "asset", parent: 2, isGroup: false, level: 2 },
+        // ====================== شجرة الحسابات المتكاملة ======================
+        let accounts = [
+            // الأصول المتداولة
+            { id: 1, code: "1000", name: "الأصول", type: "asset", category: "assets", parent: null, isGroup: true, level: 0 },
+            { id: 2, code: "1100", name: "الأصول المتداولة", type: "asset", category: "currentAssets", parent: 1, isGroup: true, level: 1 },
+            { id: 3, code: "1110", name: "النقدية والصندوق", type: "asset", category: "currentAssets", parent: 2, isGroup: false, level: 2 },
+            { id: 4, code: "1120", name: "البنوك", type: "asset", category: "currentAssets", parent: 2, isGroup: false, level: 2 },
+            { id: 5, code: "1130", name: "العملاء (مدينون)", type: "asset", category: "currentAssets", parent: 2, isGroup: false, level: 2 },
+            { id: 6, code: "1140", name: "أوراق قبض", type: "asset", category: "currentAssets", parent: 2, isGroup: false, level: 2 },
+            { id: 7, code: "1150", name: "المخزون", type: "asset", category: "currentAssets", parent: 2, isGroup: false, level: 2 },
+            { id: 8, code: "1160", name: "مصروفات مقدمة", type: "asset", category: "currentAssets", parent: 2, isGroup: false, level: 2 },
             
             // الأصول الثابتة
-            { id: 12, code: "1200", name: "الأصول الثابتة", type: "asset", parent: 1, isGroup: true, level: 1 },
-            { id: 13, code: "1210", name: "الأراضي", type: "asset", parent: 12, isGroup: false, level: 2 },
-            { id: 14, code: "1220", name: "المباني", type: "asset", parent: 12, isGroup: false, level: 2 },
-            { id: 15, code: "1230", name: "الآلات والمعدات", type: "asset", parent: 12, isGroup: false, level: 2 },
-            { id: 16, code: "1240", name: "السيارات", type: "asset", parent: 12, isGroup: false, level: 2 },
-            { id: 17, code: "1250", name: "الأثاث والتجهيزات", type: "asset", parent: 12, isGroup: false, level: 2 },
-            { id: 18, code: "1260", name: "أجهزة الكمبيوتر", type: "asset", parent: 12, isGroup: false, level: 2 },
-            { id: 19, code: "1270", name: "مجمع إهلاك المباني", type: "asset", parent: 12, isGroup: false, level: 2, negative: true },
-            { id: 20, code: "1280", name: "مجمع إهلاك الآلات", type: "asset", parent: 12, isGroup: false, level: 2, negative: true },
-            { id: 21, code: "1290", name: "مجمع إهلاك السيارات", type: "asset", parent: 12, isGroup: false, level: 2, negative: true },
+            { id: 9, code: "1200", name: "الأصول الثابتة", type: "asset", category: "fixedAssets", parent: 1, isGroup: true, level: 1 },
+            { id: 10, code: "1210", name: "الأراضي", type: "asset", category: "fixedAssets", parent: 9, isGroup: false, level: 2 },
+            { id: 11, code: "1220", name: "المباني", type: "asset", category: "fixedAssets", parent: 9, isGroup: false, level: 2 },
+            { id: 12, code: "1230", name: "الآلات والمعدات", type: "asset", category: "fixedAssets", parent: 9, isGroup: false, level: 2 },
+            { id: 13, code: "1240", name: "السيارات", type: "asset", category: "fixedAssets", parent: 9, isGroup: false, level: 2 },
+            { id: 14, code: "1250", name: "الأثاث والتجهيزات", type: "asset", category: "fixedAssets", parent: 9, isGroup: false, level: 2 },
+            { id: 15, code: "1260", name: "مجمع إهلاك المباني", type: "asset", category: "fixedAssets", parent: 9, isGroup: false, level: 2, negative: true },
+            { id: 16, code: "1270", name: "مجمع إهلاك الآلات", type: "asset", category: "fixedAssets", parent: 9, isGroup: false, level: 2, negative: true },
             
-            // الأصول غير الملموسة
-            { id: 22, code: "1300", name: "الأصول غير الملموسة", type: "asset", parent: 1, isGroup: true, level: 1 },
-            { id: 23, code: "1310", name: "شهرة المحل", type: "asset", parent: 22, isGroup: false, level: 2 },
-            { id: 24, code: "1320", name: "براءات الاختراع", type: "asset", parent: 22, isGroup: false, level: 2 },
-            { id: 25, code: "1330", name: "حقوق الامتياز", type: "asset", parent: 22, isGroup: false, level: 2 },
-            { id: 26, code: "1340", name: "العلامات التجارية", type: "asset", parent: 22, isGroup: false, level: 2 },
+            // الأصول الأخرى
+            { id: 17, code: "1300", name: "الأصول غير الملموسة", type: "asset", category: "otherAssets", parent: 1, isGroup: true, level: 1 },
+            { id: 18, code: "1310", name: "شهرة المحل", type: "asset", category: "otherAssets", parent: 17, isGroup: false, level: 2 },
             
             // الخصوم المتداولة
-            { id: 27, code: "2000", name: "الخصوم", type: "liability", parent: null, isGroup: true, level: 0 },
-            { id: 28, code: "2100", name: "الخصوم المتداولة", type: "liability", parent: 27, isGroup: true, level: 1 },
-            { id: 29, code: "2110", name: "الدائنون (دائنون)", type: "liability", parent: 28, isGroup: false, level: 2 },
-            { id: 30, code: "2120", name: "أوراق دفع", type: "liability", parent: 28, isGroup: false, level: 2 },
-            { id: 31, code: "2130", name: "قروض قصيرة الأجل", type: "liability", parent: 28, isGroup: false, level: 2 },
-            { id: 32, code: "2140", name: "الضرائب المستحقة", type: "liability", parent: 28, isGroup: false, level: 2 },
-            { id: 33, code: "2150", name: "مصروفات مستحقة", type: "liability", parent: 28, isGroup: false, level: 2 },
-            { id: 34, code: "2160", name: "إيرادات مقدمة", type: "liability", parent: 28, isGroup: false, level: 2 },
-            { id: 35, code: "2170", name: "ضريبة القيمة المضافة (VAT)", type: "liability", parent: 28, isGroup: false, level: 2 },
-            { id: 36, code: "2180", name: "التأمينات الاجتماعية", type: "liability", parent: 28, isGroup: false, level: 2 },
-            { id: 37, code: "2190", name: "رواتب وأجور مستحقة", type: "liability", parent: 28, isGroup: false, level: 2 },
+            { id: 19, code: "2000", name: "الخصوم", type: "liability", category: "liabilities", parent: null, isGroup: true, level: 0 },
+            { id: 20, code: "2100", name: "الخصوم المتداولة", type: "liability", category: "currentLiabilities", parent: 19, isGroup: true, level: 1 },
+            { id: 21, code: "2110", name: "الدائنون", type: "liability", category: "currentLiabilities", parent: 20, isGroup: false, level: 2 },
+            { id: 22, code: "2120", name: "أوراق دفع", type: "liability", category: "currentLiabilities", parent: 20, isGroup: false, level: 2 },
+            { id: 23, code: "2130", name: "قروض قصيرة الأجل", type: "liability", category: "currentLiabilities", parent: 20, isGroup: false, level: 2 },
+            { id: 24, code: "2140", name: "الضرائب المستحقة", type: "liability", category: "currentLiabilities", parent: 20, isGroup: false, level: 2 },
+            { id: 25, code: "2150", name: "ضريبة القيمة المضافة", type: "liability", category: "currentLiabilities", parent: 20, isGroup: false, level: 2 },
             
             // الخصوم طويلة الأجل
-            { id: 38, code: "2200", name: "الخصوم طويلة الأجل", type: "liability", parent: 27, isGroup: true, level: 1 },
-            { id: 39, code: "2210", name: "قروض بنكية طويلة الأجل", type: "liability", parent: 38, isGroup: false, level: 2 },
-            { id: 40, code: "2220", name: "سندات دفع", type: "liability", parent: 38, isGroup: false, level: 2 },
-            { id: 41, code: "2230", name: "مخصصات التقاعد", type: "liability", parent: 38, isGroup: false, level: 2 },
+            { id: 26, code: "2200", name: "الخصوم طويلة الأجل", type: "liability", category: "longTermLiabilities", parent: 19, isGroup: true, level: 1 },
+            { id: 27, code: "2210", name: "قروض بنكية طويلة الأجل", type: "liability", category: "longTermLiabilities", parent: 26, isGroup: false, level: 2 },
+            { id: 28, code: "2220", name: "سندات دفع", type: "liability", category: "longTermLiabilities", parent: 26, isGroup: false, level: 2 },
             
             // حقوق الملكية
-            { id: 42, code: "3000", name: "حقوق الملكية", type: "equity", parent: null, isGroup: true, level: 0 },
-            { id: 43, code: "3100", name: "رأس المال المدفوع", type: "equity", parent: 42, isGroup: false, level: 1 },
-            { id: 44, code: "3200", name: "الاحتياطيات القانونية", type: "equity", parent: 42, isGroup: false, level: 1 },
-            { id: 45, code: "3300", name: "الاحتياطيات الاختيارية", type: "equity", parent: 42, isGroup: false, level: 1 },
-            { id: 46, code: "3400", name: "الأرباح المحتجزة", type: "equity", parent: 42, isGroup: false, level: 1 },
-            { id: 47, code: "3500", name: "أرباح العام (صافي الدخل)", type: "equity", parent: 42, isGroup: false, level: 1 },
-            { id: 48, code: "3600", name: "توزيعات الأرباح", type: "equity", parent: 42, isGroup: false, level: 1 },
+            { id: 29, code: "3000", name: "حقوق الملكية", type: "equity", category: "equity", parent: null, isGroup: true, level: 0 },
+            { id: 30, code: "3100", name: "رأس المال المدفوع", type: "equity", category: "equity", parent: 29, isGroup: false, level: 1 },
+            { id: 31, code: "3200", name: "الاحتياطيات", type: "equity", category: "equity", parent: 29, isGroup: false, level: 1 },
+            { id: 32, code: "3300", name: "الأرباح المحتجزة", type: "equity", category: "equity", parent: 29, isGroup: false, level: 1 },
             
             // الإيرادات
-            { id: 49, code: "4000", name: "الإيرادات", type: "income", parent: null, isGroup: true, level: 0 },
-            { id: 50, code: "4100", name: "إيرادات المبيعات (بضاعة)", type: "income", parent: 49, isGroup: false, level: 1 },
-            { id: 51, code: "4200", name: "إيرادات الخدمات", type: "income", parent: 49, isGroup: false, level: 1 },
-            { id: 52, code: "4300", name: "إيرادات الفوائد", type: "income", parent: 49, isGroup: false, level: 1 },
-            { id: 53, code: "4400", name: "إيرادات الإيجار", type: "income", parent: 49, isGroup: false, level: 1 },
-            { id: 54, code: "4500", name: "إيرادات أخرى", type: "income", parent: 49, isGroup: false, level: 1 },
-            { id: 55, code: "4600", name: "مردودات المبيعات", type: "income", parent: 49, isGroup: false, level: 1, negative: true },
+            { id: 33, code: "4000", name: "الإيرادات", type: "income", category: "revenues", parent: null, isGroup: true, level: 0 },
+            { id: 34, code: "4100", name: "إيرادات المبيعات", type: "income", category: "revenues", parent: 33, isGroup: false, level: 1 },
+            { id: 35, code: "4200", name: "إيرادات الخدمات", type: "income", category: "revenues", parent: 33, isGroup: false, level: 1 },
+            { id: 36, code: "4300", name: "إيرادات أخرى", type: "income", category: "revenues", parent: 33, isGroup: false, level: 1 },
             
-            // المصروفات
-            { id: 56, code: "5000", name: "المصروفات", type: "expense", parent: null, isGroup: true, level: 0 },
-            { id: 57, code: "5100", name: "مصروفات تشغيلية", type: "expense", parent: 56, isGroup: true, level: 1 },
-            { id: 58, code: "5110", name: "مصروفات الرواتب والأجور", type: "expense", parent: 57, isGroup: false, level: 2 },
-            { id: 59, code: "5120", name: "مصروفات الإيجار", type: "expense", parent: 57, isGroup: false, level: 2 },
-            { id: 60, code: "5130", name: "مصروفات الكهرباء والمياه", type: "expense", parent: 57, isGroup: false, level: 2 },
-            { id: 61, code: "5140", name: "مصروفات الاتصالات والإنترنت", type: "expense", parent: 57, isGroup: false, level: 2 },
-            { id: 62, code: "5150", name: "مصروفات الصيانة", type: "expense", parent: 57, isGroup: false, level: 2 },
-            { id: 63, code: "5160", name: "مصروفات النقل والشحن", type: "expense", parent: 57, isGroup: false, level: 2 },
+            // تكلفة المبيعات
+            { id: 37, code: "5000", name: "تكلفة المبيعات", type: "expense", category: "costOfSales", parent: null, isGroup: true, level: 0 },
+            { id: 38, code: "5100", name: "مخزون أول المدة", type: "expense", category: "costOfSales", parent: 37, isGroup: false, level: 1 },
+            { id: 39, code: "5200", name: "المشتريات", type: "expense", category: "costOfSales", parent: 37, isGroup: false, level: 1 },
+            { id: 40, code: "5300", name: "مخزون آخر المدة", type: "expense", category: "costOfSales", parent: 37, isGroup: false, level: 1, negative: true },
             
-            { id: 64, code: "5200", name: "مصروفات إدارية", type: "expense", parent: 56, isGroup: true, level: 1 },
-            { id: 65, code: "5210", name: "مصروفات قرطاسية", type: "expense", parent: 64, isGroup: false, level: 2 },
-            { id: 66, code: "5220", name: "مصروفات تدريب", type: "expense", parent: 64, isGroup: false, level: 2 },
-            { id: 67, code: "5230", name: "مصروفات سفر وانتقالات", type: "expense", parent: 64, isGroup: false, level: 2 },
-            { id: 68, code: "5240", name: "مصروفات قانونية", type: "expense", parent: 64, isGroup: false, level: 2 },
-            
-            { id: 69, code: "5300", name: "مصروفات تسويقية", type: "expense", parent: 56, isGroup: true, level: 1 },
-            { id: 70, code: "5310", name: "مصروفات إعلانات", type: "expense", parent: 69, isGroup: false, level: 2 },
-            { id: 71, code: "5320", name: "مصروفات دعاية", type: "expense", parent: 69, isGroup: false, level: 2 },
-            
-            { id: 72, code: "5400", name: "مصروفات مالية", type: "expense", parent: 56, isGroup: true, level: 1 },
-            { id: 73, code: "5410", name: "فوائد بنكية", type: "expense", parent: 72, isGroup: false, level: 2 },
-            { id: 74, code: "5420", name: "عمولات بنكية", type: "expense", parent: 72, isGroup: false, level: 2 },
-            
-            { id: 75, code: "5500", name: "الإهلاكات", type: "expense", parent: 56, isGroup: true, level: 1 },
-            { id: 76, code: "5510", name: "إهلاك المباني", type: "expense", parent: 75, isGroup: false, level: 2 },
-            { id: 77, code: "5520", name: "إهلاك الآلات", type: "expense", parent: 75, isGroup: false, level: 2 },
-            { id: 78, code: "5530", name: "إهلاك السيارات", type: "expense", parent: 75, isGroup: false, level: 2 },
-            
-            { id: 79, code: "5600", name: "مصروفات متنوعة", type: "expense", parent: 56, isGroup: true, level: 1 },
-            { id: 80, code: "5610", name: "خسائر بيع أصول", type: "expense", parent: 79, isGroup: false, level: 2 }
+            // المصروفات التشغيلية
+            { id: 41, code: "6000", name: "المصروفات التشغيلية", type: "expense", category: "operatingExpenses", parent: null, isGroup: true, level: 0 },
+            { id: 42, code: "6100", name: "مصروفات رواتب وأجور", type: "expense", category: "operatingExpenses", parent: 41, isGroup: false, level: 1 },
+            { id: 43, code: "6200", name: "مصروفات إيجار", type: "expense", category: "operatingExpenses", parent: 41, isGroup: false, level: 1 },
+            { id: 44, code: "6300", name: "مصروفات كهرباء ومياه", type: "expense", category: "operatingExpenses", parent: 41, isGroup: false, level: 1 },
+            { id: 45, code: "6400", name: "مصروفات إدارية", type: "expense", category: "operatingExpenses", parent: 41, isGroup: false, level: 1 },
+            { id: 46, code: "6500", name: "مصروفات تسويقية", type: "expense", category: "operatingExpenses", parent: 41, isGroup: false, level: 1 },
+            { id: 47, code: "6600", name: "الإهلاكات", type: "expense", category: "operatingExpenses", parent: 41, isGroup: false, level: 1 }
         ];
 
-        // بيانات المستخدمين والصلاحيات
-        let users = [
-            { id: 1, username: "admin", password: "123456", name: "مدير النظام", role: "admin", roleName: "مدير كامل الصلاحيات" },
-            { id: 2, username: "accountant", password: "123456", name: "محمد أحمد", role: "accountant", roleName: "محاسب" },
-            { id: 3, username: "viewer", password: "123456", name: "سعيد محمود", role: "viewer", roleName: "مشاهد" }
-        ];
-        
         let currentUser = null;
         let journalEntries = [];
-        let customers = [];
-        let suppliers = [];
-        let inventory = [];
-        let employees = [];
-        let fixedAssets = [];
-        let branches = [{ id: 1, name: "الفرع الرئيسي", location: "القاهرة" }];
-        let exchangeRates = { USD: 48.5, EUR: 52.0, SAR: 12.9 };
-        let companySettings = { name: "شركتي", fiscalYearStart: "2024-01-01", fiscalYearEnd: "2024-12-31", currency: "EGP", vatRate: 14 };
-        let chartInstance = null;
-        
+        let nextAccountId = 48;
+
         const permissions = {
-            admin: { canAddEntry: true, canAddAccount: true, canManageUsers: true, canExport: true, canEditSettings: true, canManageBranches: true },
-            accountant: { canAddEntry: true, canAddAccount: false, canManageUsers: false, canExport: true, canEditSettings: false, canManageBranches: false },
-            viewer: { canAddEntry: false, canAddAccount: false, canManageUsers: false, canExport: false, canEditSettings: false, canManageBranches: false }
+            admin: { canAddEntry: true, canAddAccount: true, canExport: true },
+            accountant: { canAddEntry: true, canAddAccount: false, canExport: true },
+            viewer: { canAddEntry: false, canAddAccount: false, canExport: false }
         };
 
-        // تحميل البيانات المحفوظة لكل مستخدم
         function loadUserData() {
             if (!currentUser) return;
             const prefix = `user_${currentUser.username}_`;
-            journalEntries = JSON.parse(localStorage.getItem(prefix + "journalEntries")) || [];
-            customers = JSON.parse(localStorage.getItem(prefix + "customers")) || [
-                { id: 1, name: "شركة النيل للتجارة", phone: "01234567890", address: "القاهرة", balance: 0, creditLimit: 50000 },
-                { id: 2, name: "مؤسسة الأهرام", phone: "01123456789", address: "الجيزة", balance: 0, creditLimit: 30000 }
-            ];
-            suppliers = JSON.parse(localStorage.getItem(prefix + "suppliers")) || [
-                { id: 1, name: "شركة المصري للمواد الخام", phone: "01567890123", address: "الإسكندرية", balance: 0 },
-                { id: 2, name: "مؤسسة السلام للتوريدات", phone: "01234567890", address: "القاهرة", balance: 0 }
-            ];
-            inventory = JSON.parse(localStorage.getItem(prefix + "inventory")) || [
-                { id: 1, name: "منتج أ", quantity: 100, price: 50, totalValue: 5000, category: "بضاعة" },
-                { id: 2, name: "منتج ب", quantity: 50, price: 100, totalValue: 5000, category: "بضاعة" },
-                { id: 3, name: "جهاز كمبيوتر", quantity: 10, price: 8000, totalValue: 80000, category: "أصول" }
-            ];
-            employees = JSON.parse(localStorage.getItem(prefix + "employees")) || [
-                { id: 1, name: "أحمد محمود", position: "محاسب", salary: 5000, joinDate: "2023-01-01" },
-                { id: 2, name: "سارة علي", position: "مسوقة", salary: 4500, joinDate: "2023-06-01" }
-            ];
-            fixedAssets = JSON.parse(localStorage.getItem(prefix + "fixedAssets")) || [
-                { id: 1, name: "سيارة نقل", purchaseDate: "2023-01-01", cost: 200000, salvageValue: 20000, usefulLife: 5, currentDepreciation: 36000 },
-                { id: 2, name: "مبنى إداري", purchaseDate: "2022-01-01", cost: 1000000, salvageValue: 100000, usefulLife: 20, currentDepreciation: 45000 }
-            ];
+            const savedEntries = localStorage.getItem(prefix + "journalEntries");
+            journalEntries = savedEntries ? JSON.parse(savedEntries) : [];
+            const savedAccounts = localStorage.getItem(prefix + "accounts");
+            if (savedAccounts) accounts = JSON.parse(savedAccounts);
+            const savedNextId = localStorage.getItem(prefix + "nextAccountId");
+            if (savedNextId) nextAccountId = parseInt(savedNextId);
         }
-        
+
         function saveAllData() {
             if (!currentUser) return;
             const prefix = `user_${currentUser.username}_`;
             localStorage.setItem(prefix + "journalEntries", JSON.stringify(journalEntries));
-            localStorage.setItem(prefix + "customers", JSON.stringify(customers));
-            localStorage.setItem(prefix + "suppliers", JSON.stringify(suppliers));
-            localStorage.setItem(prefix + "inventory", JSON.stringify(inventory));
-            localStorage.setItem(prefix + "employees", JSON.stringify(employees));
-            localStorage.setItem(prefix + "fixedAssets", JSON.stringify(fixedAssets));
+            localStorage.setItem(prefix + "accounts", JSON.stringify(accounts));
+            localStorage.setItem(prefix + "nextAccountId", nextAccountId.toString());
         }
 
         function showMessage(msg, type = "success") {
@@ -467,7 +228,6 @@
             setTimeout(() => toast.style.display = "none", 3000);
         }
 
-        // حساب الأرصدة
         function calculateBalances() {
             let balances = {};
             accounts.forEach(acc => { balances[acc.id] = { debit: 0, credit: 0 }; });
@@ -495,43 +255,149 @@
             return finalBalances;
         }
 
-        // تصدير PDF
-        function exportToPDF(elementId, filename) {
-            if (!permissions[currentUser.role]?.canExport) { showMessage("ليس لديك صلاحية للتصدير", "error"); return; }
-            const element = document.getElementById(elementId);
-            if (!element) { showMessage("لا يوجد بيانات للتصدير", "error"); return; }
-            const opt = { margin: [0.5, 0.5, 0.5, 0.5], filename: `${filename}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } };
-            html2pdf().set(opt).from(element).save();
-            showMessage(`تم تصدير ${filename}.pdf بنجاح`);
-        }
-
-        function exportToExcel(data, filename) {
-            if (!permissions[currentUser.role]?.canExport) { showMessage("ليس لديك صلاحية للتصدير", "error"); return; }
-            const ws = XLSX.utils.json_to_sheet(data);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
-            XLSX.writeFile(wb, `${filename}.xlsx`);
-            showMessage(`تم تصدير ${filename}.xlsx بنجاح`);
-        }
-
-        // عرض لوحة التحكم مع رسوم بيانية
-        function renderDashboard() {
+        // ====================== قائمة الدخل متعددة المستويات الاحترافية ======================
+        function renderIncomeStatement() {
             const balances = calculateBalances();
-            let totalAssets = 0, totalLiabilities = 0, totalEquity = 0;
-            accounts.forEach(acc => {
-                if (acc.type === "asset" && !acc.isGroup && !acc.negative) {
-                    const bal = balances[acc.id];
-                    totalAssets += bal.type === "debit" ? bal.amount : 0;
-                }
-                if (acc.type === "liability" && !acc.isGroup) {
-                    const bal = balances[acc.id];
-                    totalLiabilities += bal.type === "credit" ? bal.amount : 0;
-                }
-                if (acc.type === "equity" && !acc.isGroup) {
-                    const bal = balances[acc.id];
-                    totalEquity += bal.type === "credit" ? bal.amount : 0;
-                }
+            
+            // إجمالي الإيرادات
+            let totalRevenues = 0;
+            const revenueAccounts = accounts.filter(a => a.type === "income" && !a.isGroup);
+            revenueAccounts.forEach(acc => {
+                const bal = balances[acc.id];
+                totalRevenues += bal.type === "credit" ? bal.amount : 0;
             });
+            
+            // تكلفة المبيعات
+            let totalCostOfSales = 0;
+            const costAccounts = accounts.filter(a => a.category === "costOfSales" && !a.isGroup);
+            costAccounts.forEach(acc => {
+                const bal = balances[acc.id];
+                let amount = bal.type === "debit" ? bal.amount : 0;
+                if (acc.negative) amount = -amount;
+                totalCostOfSales += amount;
+            });
+            
+            const grossProfit = totalRevenues - totalCostOfSales;
+            
+            // المصروفات التشغيلية
+            let totalOperatingExpenses = 0;
+            const expenseAccounts = accounts.filter(a => a.category === "operatingExpenses" && !a.isGroup);
+            expenseAccounts.forEach(acc => {
+                const bal = balances[acc.id];
+                totalOperatingExpenses += bal.type === "debit" ? bal.amount : 0;
+            });
+            
+            const operatingIncome = grossProfit - totalOperatingExpenses;
+            
+            // الإيرادات والمصروفات الأخرى (سيتم إضافتها لاحقاً)
+            const netIncome = operatingIncome;
+            
+            let html = `
+                <div class="card" id="income-report">
+                    <div class="card-header">
+                        <h3><i class="fas fa-chart-line"></i> قائمة الدخل متعددة المستويات</h3>
+                        <div class="print-hide">${permissions[currentUser.role]?.canExport ? '<button onclick="exportToPDF(\'income-report\', \'income_statement\')" class="btn-success"><i class="fas fa-file-pdf"></i> PDF</button>' : ''}</div>
+                    </div>
+                    <div class="financial-statement">
+                        <div class="statement-section">
+                            <div class="statement-title">أولاً: الإيرادات</div>
+                            <div class="statement-row"><span>إجمالي الإيرادات</span><span>${totalRevenues.toFixed(2)}</span></div>
+                        </div>
+                        
+                        <div class="statement-section">
+                            <div class="statement-title">ثانياً: تكلفة المبيعات</div>
+                            ${costAccounts.map(acc => {
+                                const bal = balances[acc.id];
+                                let amount = bal.type === "debit" ? bal.amount : 0;
+                                if (acc.negative) amount = -amount;
+                                return `<div class="statement-row indent"><span>${acc.name}</span><span>${amount.toFixed(2)}</span></div>`;
+                            }).join('')}
+                            <div class="statement-row total"><span>إجمالي تكلفة المبيعات</span><span>${totalCostOfSales.toFixed(2)}</span></div>
+                        </div>
+                        
+                        <div class="statement-section">
+                            <div class="statement-title">ثالثاً: مجمل الربح</div>
+                            <div class="statement-row total"><span>مجمل الربح = (الإيرادات - تكلفة المبيعات)</span><span>${grossProfit.toFixed(2)}</span></div>
+                        </div>
+                        
+                        <div class="statement-section">
+                            <div class="statement-title">رابعاً: المصروفات التشغيلية</div>
+                            ${expenseAccounts.map(acc => {
+                                const bal = balances[acc.id];
+                                return `<div class="statement-row indent"><span>${acc.name}</span><span>${(bal.type === "debit" ? bal.amount : 0).toFixed(2)}</span></div>`;
+                            }).join('')}
+                            <div class="statement-row total"><span>إجمالي المصروفات التشغيلية</span><span>${totalOperatingExpenses.toFixed(2)}</span></div>
+                        </div>
+                        
+                        <div class="statement-section">
+                            <div class="statement-title">خامساً: صافي الربح</div>
+                            <div class="statement-row double-total"><span>صافي الربح قبل الضرائب</span><span>${operatingIncome.toFixed(2)}</span></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById("mainContent").innerHTML = html;
+        }
+
+        // ====================== المركز المالي المفصل ======================
+        function renderBalanceSheet() {
+            const balances = calculateBalances();
+            
+            // الأصول المتداولة
+            let currentAssetsTotal = 0;
+            const currentAssets = accounts.filter(a => a.category === "currentAssets" && !a.isGroup);
+            currentAssets.forEach(acc => {
+                const bal = balances[acc.id];
+                currentAssetsTotal += bal.type === "debit" ? bal.amount : 0;
+            });
+            
+            // الأصول الثابتة
+            let fixedAssetsTotal = 0;
+            const fixedAssets = accounts.filter(a => a.category === "fixedAssets" && !a.isGroup);
+            fixedAssets.forEach(acc => {
+                const bal = balances[acc.id];
+                let amount = bal.type === "debit" ? bal.amount : 0;
+                if (acc.negative) amount = -amount;
+                fixedAssetsTotal += amount;
+            });
+            
+            // الأصول الأخرى
+            let otherAssetsTotal = 0;
+            const otherAssets = accounts.filter(a => a.category === "otherAssets" && !a.isGroup);
+            otherAssets.forEach(acc => {
+                const bal = balances[acc.id];
+                otherAssetsTotal += bal.type === "debit" ? bal.amount : 0;
+            });
+            
+            const totalAssets = currentAssetsTotal + fixedAssetsTotal + otherAssetsTotal;
+            
+            // الخصوم المتداولة
+            let currentLiabilitiesTotal = 0;
+            const currentLiabilities = accounts.filter(a => a.category === "currentLiabilities" && !a.isGroup);
+            currentLiabilities.forEach(acc => {
+                const bal = balances[acc.id];
+                currentLiabilitiesTotal += bal.type === "credit" ? bal.amount : 0;
+            });
+            
+            // الخصوم طويلة الأجل
+            let longTermLiabilitiesTotal = 0;
+            const longTermLiabilities = accounts.filter(a => a.category === "longTermLiabilities" && !a.isGroup);
+            longTermLiabilities.forEach(acc => {
+                const bal = balances[acc.id];
+                longTermLiabilitiesTotal += bal.type === "credit" ? bal.amount : 0;
+            });
+            
+            const totalLiabilities = currentLiabilitiesTotal + longTermLiabilitiesTotal;
+            
+            // حقوق الملكية
+            let equityTotal = 0;
+            const equityAccounts = accounts.filter(a => a.category === "equity" && !a.isGroup);
+            equityAccounts.forEach(acc => {
+                const bal = balances[acc.id];
+                equityTotal += bal.type === "credit" ? bal.amount : 0;
+            });
+            
+            // إضافة صافي الربح الحالي
             let totalRevenues = 0, totalExpenses = 0;
             accounts.forEach(acc => {
                 if (acc.type === "income" && !acc.isGroup) {
@@ -544,53 +410,166 @@
                 }
             });
             const netIncome = totalRevenues - totalExpenses;
+            equityTotal += netIncome;
             
-            const html = `
-                <div class="stats-grid">
-                    <div class="stat-card" style="background:linear-gradient(135deg,#667eea,#764ba2)"><i class="fas fa-landmark"></i><div class="number">${totalAssets.toFixed(2)}</div><div class="label">إجمالي الأصول</div></div>
-                    <div class="stat-card" style="background:linear-gradient(135deg,#f093fb,#f5576c)"><i class="fas fa-chart-line"></i><div class="number">${totalRevenues.toFixed(2)}</div><div class="label">إجمالي الإيرادات</div></div>
-                    <div class="stat-card" style="background:linear-gradient(135deg,#4facfe,#00f2fe)"><i class="fas fa-chart-line"></i><div class="number">${totalExpenses.toFixed(2)}</div><div class="label">إجمالي المصروفات</div></div>
-                    <div class="stat-card" style="background:linear-gradient(135deg,#fa709a,#fee140)"><i class="fas fa-money-bill-wave"></i><div class="number">${netIncome.toFixed(2)}</div><div class="label">صافي الربح</div></div>
-                </div>
-                <div class="card" id="dashboard-report">
-                    <div class="card-header"><h3><i class="fas fa-chart-pie"></i> تحليل مالي</h3><div class="print-hide">${permissions[currentUser.role]?.canExport ? '<button onclick="exportToPDF(\'dashboard-report\', \'dashboard\')" class="btn-success"><i class="fas fa-file-pdf"></i> PDF</button>' : ''}</div></div>
-                    <div class="chart-container"><canvas id="financialChart"></canvas></div>
-                </div>
-                <div class="card">
-                    <div class="card-header"><h3><i class="fas fa-history"></i> أخر القيود المحاسبية</h3></div>
-                    <div class="table-responsive"><table><thead><tr><th>التاريخ</th><th>البيان</th><th>عدد السطور</th></tr></thead><tbody>
-                        ${journalEntries.slice(-10).reverse().map(entry => `<tr><td>${entry.date}</td><td>${entry.description}</td><td>${entry.lines.length}</td></tr>`).join("")}
-                        ${journalEntries.length === 0 ? '<tr><td colspan="3">لا توجد قيود بعد</td></tr>' : ""}
-                    </tbody></table></div>
+            let html = `
+                <div class="card" id="balance-report">
+                    <div class="card-header">
+                        <h3><i class="fas fa-landmark"></i> المركز المالي المفصل (الميزانية العمومية)</h3>
+                        <div class="print-hide">${permissions[currentUser.role]?.canExport ? '<button onclick="exportToPDF(\'balance-report\', \'balance_sheet\')" class="btn-success"><i class="fas fa-file-pdf"></i> PDF</button>' : ''}</div>
+                    </div>
+                    <div class="financial-statement">
+                        <div class="statement-section">
+                            <div class="statement-title">أولاً: الأصول</div>
+                            
+                            <div class="statement-row" style="font-weight:bold; background:#f0f0f0;"><span>الأصول المتداولة</span><span>${currentAssetsTotal.toFixed(2)}</span></div>
+                            ${currentAssets.map(acc => {
+                                const bal = balances[acc.id];
+                                return `<div class="statement-row indent"><span>${acc.name}</span><span>${(bal.type === "debit" ? bal.amount : 0).toFixed(2)}</span></div>`;
+                            }).join('')}
+                            
+                            <div class="statement-row" style="font-weight:bold; background:#f0f0f0; margin-top:10px;"><span>الأصول الثابتة</span><span>${fixedAssetsTotal.toFixed(2)}</span></div>
+                            ${fixedAssets.map(acc => {
+                                const bal = balances[acc.id];
+                                let amount = bal.type === "debit" ? bal.amount : 0;
+                                if (acc.negative) amount = -amount;
+                                return `<div class="statement-row indent"><span>${acc.name}</span><span>${amount.toFixed(2)}</span></div>`;
+                            }).join('')}
+                            
+                            ${otherAssets.length > 0 ? `<div class="statement-row" style="font-weight:bold; background:#f0f0f0; margin-top:10px;"><span>الأصول الأخرى</span><span>${otherAssetsTotal.toFixed(2)}</span></div>
+                            ${otherAssets.map(acc => {
+                                const bal = balances[acc.id];
+                                return `<div class="statement-row indent"><span>${acc.name}</span><span>${(bal.type === "debit" ? bal.amount : 0).toFixed(2)}</span></div>`;
+                            }).join('')}` : ''}
+                            
+                            <div class="statement-row total"><span>إجمالي الأصول</span><span>${totalAssets.toFixed(2)}</span></div>
+                        </div>
+                        
+                        <div class="statement-section">
+                            <div class="statement-title">ثانياً: الخصوم</div>
+                            
+                            <div class="statement-row" style="font-weight:bold; background:#f0f0f0;"><span>الخصوم المتداولة</span><span>${currentLiabilitiesTotal.toFixed(2)}</span></div>
+                            ${currentLiabilities.map(acc => {
+                                const bal = balances[acc.id];
+                                return `<div class="statement-row indent"><span>${acc.name}</span><span>${(bal.type === "credit" ? bal.amount : 0).toFixed(2)}</span></div>`;
+                            }).join('')}
+                            
+                            <div class="statement-row" style="font-weight:bold; background:#f0f0f0; margin-top:10px;"><span>الخصوم طويلة الأجل</span><span>${longTermLiabilitiesTotal.toFixed(2)}</span></div>
+                            ${longTermLiabilities.map(acc => {
+                                const bal = balances[acc.id];
+                                return `<div class="statement-row indent"><span>${acc.name}</span><span>${(bal.type === "credit" ? bal.amount : 0).toFixed(2)}</span></div>`;
+                            }).join('')}
+                            
+                            <div class="statement-row total"><span>إجمالي الخصوم</span><span>${totalLiabilities.toFixed(2)}</span></div>
+                        </div>
+                        
+                        <div class="statement-section">
+                            <div class="statement-title">ثالثاً: حقوق الملكية</div>
+                            ${equityAccounts.map(acc => {
+                                const bal = balances[acc.id];
+                                return `<div class="statement-row"><span>${acc.name}</span><span>${(bal.type === "credit" ? bal.amount : 0).toFixed(2)}</span></div>`;
+                            }).join('')}
+                            <div class="statement-row"><span>صافي الربح</span><span>${netIncome.toFixed(2)}</span></div>
+                            <div class="statement-row total"><span>إجمالي حقوق الملكية</span><span>${equityTotal.toFixed(2)}</span></div>
+                        </div>
+                        
+                        <div class="statement-section">
+                            <div class="statement-row double-total"><span>إجمالي الخصوم + حقوق الملكية</span><span>${(totalLiabilities + equityTotal).toFixed(2)}</span></div>
+                        </div>
+                    </div>
                 </div>
             `;
             document.getElementById("mainContent").innerHTML = html;
-            
-            // رسم الرسم البياني
-            if (chartInstance) chartInstance.destroy();
-            const ctx = document.getElementById('financialChart')?.getContext('2d');
-            if (ctx) {
-                chartInstance = new Chart(ctx, {
-                    type: 'bar',
-                    data: { labels: ['الأصول', 'الخصوم', 'حقوق الملكية', 'الإيرادات', 'المصروفات'], 
-                            datasets: [{ label: 'القيم', data: [totalAssets, totalLiabilities, totalEquity, totalRevenues, totalExpenses], 
-                                        backgroundColor: ['#667eea', '#f093fb', '#4facfe', '#28a745', '#dc3545'] }] },
-                    options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'top' } } }
-                });
+        }
+
+        // ميزان المراجعة
+        function renderTrialBalance() {
+            const balances = calculateBalances();
+            let trialData = [];
+            let totalDebit = 0, totalCredit = 0;
+            accounts.forEach(acc => {
+                if (!acc.isGroup) {
+                    const bal = balances[acc.id];
+                    const debitVal = bal.type === "debit" ? Math.abs(bal.amount) : 0;
+                    const creditVal = bal.type === "credit" ? Math.abs(bal.amount) : 0;
+                    totalDebit += debitVal; totalCredit += creditVal;
+                    trialData.push({ code: acc.code, name: acc.name, debit: debitVal, credit: creditVal });
+                }
+            });
+            let html = `<div class="card" id="trial-report"><div class="card-header"><h3><i class="fas fa-balance-scale"></i> ميزان المراجعة</h3><div class="print-hide">${permissions[currentUser.role]?.canExport ? '<button onclick="exportToPDF(\'trial-report\', \'trial_balance\')" class="btn-success"><i class="fas fa-file-pdf"></i> PDF</button>' : ''}</div></div><div class="table-responsive"><table><thead><tr><th>رقم الحساب</th><th>اسم الحساب</th><th>مدين</th><th>دائن</th></tr></thead><tbody>`;
+            trialData.forEach(row => { html += `<tr><td>${row.code}</td><td>${row.name}</td><td>${row.debit.toFixed(2)}</td><td>${row.credit.toFixed(2)}</td></tr>`; });
+            html += `<tr style="background:#ffe0b3"><td colspan="2"><strong>المجموع</strong></td><td><strong>${totalDebit.toFixed(2)}</strong></td><td><strong>${totalCredit.toFixed(2)}</strong></td></tr></tbody>}</div></div>`;
+            document.getElementById("mainContent").innerHTML = html;
+        }
+
+        // إضافة حساب جديد
+        function renderAddAccount() {
+            if (!permissions[currentUser.role]?.canAddAccount) {
+                document.getElementById("mainContent").innerHTML = `<div class="card"><h3>غير مسموح</h3><p>ليس لديك صلاحية لإضافة حسابات</p></div>`;
+                return;
             }
+            const categories = [
+                { value: "currentAssets", name: "الأصول المتداولة" },
+                { value: "fixedAssets", name: "الأصول الثابتة" },
+                { value: "otherAssets", name: "الأصول الأخرى" },
+                { value: "currentLiabilities", name: "الخصوم المتداولة" },
+                { value: "longTermLiabilities", name: "الخصوم طويلة الأجل" },
+                { value: "equity", name: "حقوق الملكية" },
+                { value: "revenues", name: "الإيرادات" },
+                { value: "costOfSales", name: "تكلفة المبيعات" },
+                { value: "operatingExpenses", name: "المصروفات التشغيلية" }
+            ];
+            let html = `<div class="card"><div class="card-header"><h3><i class="fas fa-plus-circle"></i> إضافة حساب جديد</h3></div>
+                <div class="form-group"><label>اسم الحساب</label><input type="text" id="newAccName" placeholder="مثال: مصروفات الصيانة"></div>
+                <div class="form-group"><label>نوع الحساب</label><select id="newAccType"><option value="asset">أصل (Asset)</option><option value="liability">خصم (Liability)</option><option value="equity">حقوق ملكية (Equity)</option><option value="income">إيراد (Income)</option><option value="expense">مصروف (Expense)</option></select></div>
+                <div class="form-group"><label>التصنيف (للقوائم المالية)</label><select id="newAccCategory">${categories.map(c => `<option value="${c.value}">${c.name}</option>`).join('')}</select></div>
+                <button onclick="addNewAccount()" class="btn-success"><i class="fas fa-save"></i> إضافة الحساب</button>
+                </div>`;
+            document.getElementById("mainContent").innerHTML = html;
+        }
+
+        function addNewAccount() {
+            const name = document.getElementById("newAccName").value.trim();
+            const type = document.getElementById("newAccType").value;
+            const category = document.getElementById("newAccCategory").value;
+            if (!name) { showMessage("أدخل اسم الحساب", "error"); return; }
+            
+            let parentId = null;
+            let code = (nextAccountId + 1000).toString();
+            
+            // تحديد الأب المناسب حسب التصنيف
+            if (category === "currentAssets" || category === "fixedAssets" || category === "otherAssets") parentId = 1;
+            else if (category === "currentLiabilities" || category === "longTermLiabilities") parentId = 19;
+            else if (category === "equity") parentId = 29;
+            else if (category === "revenues") parentId = 33;
+            else if (category === "costOfSales") parentId = 37;
+            else if (category === "operatingExpenses") parentId = 41;
+            
+            accounts.push({
+                id: nextAccountId++, code, name, type, category,
+                parent: parentId, isGroup: false, level: 2
+            });
+            saveAllData();
+            showMessage(`تم إضافة الحساب "${name}" بنجاح`);
+            renderChartOfAccounts();
         }
 
         // شجرة الحسابات
         function renderChartOfAccounts() {
             const balances = calculateBalances();
-            const grouped = { asset: [], liability: [], equity: [], income: [], expense: [] };
-            accounts.forEach(acc => { if (!acc.isGroup && grouped[acc.type]) grouped[acc.type].push(acc); });
-            const typeNames = { asset: "الأصول (Assets)", liability: "الخصوم (Liabilities)", equity: "حقوق الملكية (Equity)", income: "الإيرادات (Income)", expense: "المصروفات (Expenses)" };
-            let html = `<div class="card" id="chart-report"><div class="card-header"><h3><i class="fas fa-tree"></i> شجرة الحسابات الشاملة</h3><div class="print-hide">${permissions[currentUser.role]?.canExport ? '<button onclick="exportToPDF(\'chart-report\', \'chart_of_accounts\')" class="btn-success"><i class="fas fa-file-pdf"></i> PDF</button>' : ''}</div></div>`;
-            for (let [type, name] of Object.entries(typeNames)) {
-                const totalBalance = grouped[type].reduce((sum, acc) => sum + (balances[acc.id]?.amount || 0), 0);
-                html += `<div class="tree-item" style="background:#e3f2fd; font-weight:bold;"><i class="fas fa-folder-open"></i> ${name} <span class="badge">المجموع: ${totalBalance.toFixed(2)}</span></div>`;
-                grouped[type].forEach(acc => {
+            const grouped = { currentAssets: [], fixedAssets: [], otherAssets: [], currentLiabilities: [], longTermLiabilities: [], equity: [], revenues: [], costOfSales: [], operatingExpenses: [] };
+            accounts.forEach(acc => { if (!acc.isGroup && grouped[acc.category]) grouped[acc.category].push(acc); });
+            const categoryNames = {
+                currentAssets: "الأصول المتداولة", fixedAssets: "الأصول الثابتة", otherAssets: "الأصول الأخرى",
+                currentLiabilities: "الخصوم المتداولة", longTermLiabilities: "الخصوم طويلة الأجل", equity: "حقوق الملكية",
+                revenues: "الإيرادات", costOfSales: "تكلفة المبيعات", operatingExpenses: "المصروفات التشغيلية"
+            };
+            let html = `<div class="card" id="chart-report"><div class="card-header"><h3><i class="fas fa-tree"></i> شجرة الحسابات</h3><div class="print-hide">${permissions[currentUser.role]?.canExport ? '<button onclick="exportToPDF(\'chart-report\', \'chart_of_accounts\')" class="btn-success"><i class="fas fa-file-pdf"></i> PDF</button>' : ''}</div></div>`;
+            for (let [cat, name] of Object.entries(categoryNames)) {
+                const catAccounts = grouped[cat] || [];
+                const totalBalance = catAccounts.reduce((sum, acc) => sum + (balances[acc.id]?.amount || 0), 0);
+                html += `<div class="tree-item" style="background:#e3f2fd; font-weight:bold;"><i class="fas fa-folder-open"></i> ${name} <span class="badge" style="background:#1976d2; color:white; padding:2px 8px; border-radius:12px;">المجموع: ${totalBalance.toFixed(2)}</span></div>`;
+                catAccounts.forEach(acc => {
                     const balance = balances[acc.id]?.amount || 0;
                     html += `<div class="tree-node"><div class="tree-item"><i class="fas fa-book"></i> ${acc.code} - ${acc.name} <span class="badge">${balance.toFixed(2)}</span></div></div>`;
                 });
@@ -599,20 +578,53 @@
             document.getElementById("mainContent").innerHTML = html;
         }
 
+        // لوحة التحكم
+        function renderDashboard() {
+            const balances = calculateBalances();
+            let totalAssets = 0, totalRevenues = 0, totalExpenses = 0;
+            accounts.forEach(acc => {
+                if (acc.type === "asset" && !acc.isGroup && !acc.negative) {
+                    const bal = balances[acc.id];
+                    totalAssets += bal.type === "debit" ? bal.amount : 0;
+                }
+                if (acc.type === "income" && !acc.isGroup) {
+                    const bal = balances[acc.id];
+                    totalRevenues += bal.type === "credit" ? bal.amount : 0;
+                }
+                if (acc.type === "expense" && !acc.isGroup) {
+                    const bal = balances[acc.id];
+                    totalExpenses += bal.type === "debit" ? bal.amount : 0;
+                }
+            });
+            const netIncome = totalRevenues - totalExpenses;
+            const html = `
+                <div class="stats-grid">
+                    <div class="stat-card"><i class="fas fa-landmark"></i><div class="number">${totalAssets.toFixed(2)}</div><div>إجمالي الأصول</div></div>
+                    <div class="stat-card" style="background:linear-gradient(135deg,#f093fb,#f5576c)"><i class="fas fa-chart-line"></i><div class="number">${totalRevenues.toFixed(2)}</div><div>إجمالي الإيرادات</div></div>
+                    <div class="stat-card" style="background:linear-gradient(135deg,#4facfe,#00f2fe)"><i class="fas fa-chart-line"></i><div class="number">${totalExpenses.toFixed(2)}</div><div>إجمالي المصروفات</div></div>
+                    <div class="stat-card" style="background:linear-gradient(135deg,#fa709a,#fee140)"><i class="fas fa-money-bill-wave"></i><div class="number">${netIncome.toFixed(2)}</div><div>صافي الربح</div></div>
+                </div>
+                <div class="card"><div class="card-header"><h3>أخر القيود</h3></div><div class="table-responsive"><table><thead><tr><th>التاريخ</th><th>البيان</th></thead><tbody>
+                    ${journalEntries.slice(-5).reverse().map(entry => `<tr><td>${entry.date}</td><td>${entry.description}</td></tr>`).join('')}
+                    ${journalEntries.length === 0 ? '<tr><td colspan="2">لا توجد قيود</td></tr>' : ''}
+                </tbody>}</div></div>`;
+            document.getElementById("mainContent").innerHTML = html;
+        }
+
         // إدخال قيد
         let entryRows = [{ accountId: "", debit: 0, credit: 0 }];
         function renderJournalEntry() {
             if (!permissions[currentUser.role]?.canAddEntry) {
-                document.getElementById("mainContent").innerHTML = `<div class="card"><div class="card-header"><h3>غير مسموح</h3></div><p>ليس لديك صلاحية لإدخال القيود المحاسبية</p></div>`;
+                document.getElementById("mainContent").innerHTML = `<div class="card"><h3>غير مسموح</h3><p>ليس لديك صلاحية لإدخال القيود</p></div>`;
                 return;
             }
             const accountOptions = accounts.filter(a => !a.isGroup).map(a => `<option value="${a.id}">${a.code} - ${a.name}</option>`).join("");
-            const rowsHtml = entryRows.map((row, idx) => `<div class="form-row" data-row="${idx}"><div class="form-group"><select class="account-select" data-idx="${idx}">${accountOptions}</select></div><div class="form-group"><input type="number" class="debit-input" data-idx="${idx}" placeholder="مدين" value="${row.debit}"></div><div class="form-group"><input type="number" class="credit-input" data-idx="${idx}" placeholder="دائن" value="${row.credit}"></div><div class="form-group"><button onclick="removeEntryRow(${idx})" class="btn-danger">✖</button></div></div>`).join("");
+            const rowsHtml = entryRows.map((row, idx) => `<div class="form-row"><div class="form-group"><select class="account-select" data-idx="${idx}">${accountOptions}</select></div><div class="form-group"><input type="number" class="debit-input" data-idx="${idx}" placeholder="مدين" value="${row.debit}"></div><div class="form-group"><input type="number" class="credit-input" data-idx="${idx}" placeholder="دائن" value="${row.credit}"></div><div class="form-group"><button onclick="removeEntryRow(${idx})" class="btn-danger">✖</button></div></div>`).join("");
             const html = `<div class="card"><div class="card-header"><h3><i class="fas fa-pen-alt"></i> إدخال قيد يومية</h3></div>
                 <div class="form-group"><label>التاريخ</label><input type="date" id="entryDate" value="${new Date().toISOString().split('T')[0]}"></div>
                 <div class="form-group"><label>البيان</label><input type="text" id="entryDesc" placeholder="وصف القيد"></div>
                 <div id="entryRowsContainer">${rowsHtml}</div>
-                <button onclick="addEntryRow()" class="btn-success"><i class="fas fa-plus"></i> إضافة سطر</button>
+                <button onclick="addEntryRow()" class="btn-success">+ إضافة سطر</button>
                 <button onclick="saveJournalEntry()" style="margin-right:10px"><i class="fas fa-save"></i> حفظ القيد</button></div>`;
             document.getElementById("mainContent").innerHTML = html;
             document.querySelectorAll(".account-select").forEach(select => { select.onchange = (e) => { entryRows[parseInt(e.target.dataset.idx)].accountId = parseInt(e.target.value); }; });
@@ -642,126 +654,25 @@
             renderJournalEntry();
         }
 
-        // ميزان المراجعة
-        function renderTrialBalance() {
-            const balances = calculateBalances();
-            let trialData = [];
-            let totalDebit = 0, totalCredit = 0;
-            accounts.forEach(acc => {
-                if (!acc.isGroup) {
-                    const bal = balances[acc.id];
-                    const debitVal = bal.type === "debit" ? Math.abs(bal.amount) : 0;
-                    const creditVal = bal.type === "credit" ? Math.abs(bal.amount) : 0;
-                    totalDebit += debitVal; totalCredit += creditVal;
-                    trialData.push({ code: acc.code, name: acc.name, debit: debitVal, credit: creditVal });
-                }
-            });
-            let html = `<div class="card" id="trial-report"><div class="card-header"><h3><i class="fas fa-balance-scale"></i> ميزان المراجعة</h3><div class="print-hide">${permissions[currentUser.role]?.canExport ? '<button onclick="exportToPDF(\'trial-report\', \'trial_balance\')" class="btn-success"><i class="fas fa-file-pdf"></i> PDF</button><button onclick="exportToExcel(' + JSON.stringify(trialData).replace(/"/g, '&quot;') + ', \'trial_balance\')" class="btn-warning"><i class="fas fa-file-excel"></i> Excel</button>' : ''}</div></div><div class="table-responsive"><table><thead><tr><th>رقم الحساب</th><th>اسم الحساب</th><th>مدين</th><th>دائن</th></tr></thead><tbody>`;
-            trialData.forEach(row => { html += `<tr><td>${row.code}</td><td>${row.name}</td><td>${row.debit.toFixed(2)}</td><td>${row.credit.toFixed(2)}</td></tr>`; });
-            html += `<tr style="background:#ffe0b3"><td colspan="2"><strong>المجموع</strong></td><td><strong>${totalDebit.toFixed(2)}</strong></td><td><strong>${totalCredit.toFixed(2)}</strong></td></tr></tbody></table></div></div>`;
-            document.getElementById("mainContent").innerHTML = html;
-        }
-
-        // قائمة الدخل متعددة المستويات
-        function renderIncomeStatement() {
-            const balances = calculateBalances();
-            let revenues = [], expenses = [];
-            accounts.forEach(acc => {
-                if (acc.type === "income" && !acc.isGroup && !acc.negative) {
-                    const bal = balances[acc.id];
-                    const amount = bal.type === "credit" ? bal.amount : 0;
-                    if (amount !== 0) revenues.push({ name: acc.name, amount });
-                }
-                if (acc.type === "expense" && !acc.isGroup) {
-                    const bal = balances[acc.id];
-                    const amount = bal.type === "debit" ? bal.amount : 0;
-                    if (amount !== 0) expenses.push({ name: acc.name, amount });
-                }
-            });
-            const totalRevenues = revenues.reduce((s, r) => s + r.amount, 0);
-            const totalExpenses = expenses.reduce((s, e) => s + e.amount, 0);
-            const netIncome = totalRevenues - totalExpenses;
-            let html = `<div class="card" id="income-report"><div class="card-header"><h3><i class="fas fa-chart-line"></i> قائمة الدخل متعددة المستويات</h3><div class="print-hide">${permissions[currentUser.role]?.canExport ? '<button onclick="exportToPDF(\'income-report\', \'income_statement\')" class="btn-success"><i class="fas fa-file-pdf"></i> PDF</button>' : ''}</div></div>
-                <div style="background:#f8f9fa; padding:15px; border-radius:10px; margin-bottom:20px;"><h4 style="color:#0d47a1;">إيرادات المبيعات</h4>
-                <div class="table-responsive"><table><thead><tr><th>البيان</th><th>المبلغ</th></tr></thead><tbody>${revenues.map(r => `<tr><td>${r.name}</td><td>${r.amount.toFixed(2)}</td></tr>`).join("")}<tr style="background:#e3f2fd;"><td><strong>إجمالي الإيرادات</strong></td><td><strong>${totalRevenues.toFixed(2)}</strong></td></tr></tbody></table></div>
-                <h4 style="color:#0d47a1; margin-top:20px;">مصروفات التشغيل</h4>
-                <div class="table-responsive"><table><thead><tr><th>البيان</th><th>المبلغ</th></tr></thead><tbody>${expenses.map(e => `<tr><td>${e.name}</td><td>${e.amount.toFixed(2)}</td></tr>`).join("")}<tr style="background:#e3f2fd;"><td><strong>إجمالي المصروفات</strong></td><td><strong>${totalExpenses.toFixed(2)}</strong></td></tr></tbody></table></div>
-                <div style="background:#ffe0b3; padding:15px; border-radius:10px; margin-top:20px; text-align:center;"><h3>صافي الربح / (الخسارة) = ${netIncome.toFixed(2)}</h3></div></div></div>`;
-            document.getElementById("mainContent").innerHTML = html;
-        }
-
-        // المركز المالي
-        function renderBalanceSheet() {
-            const balances = calculateBalances();
-            let assets = [], liabilities = [], equities = [];
-            accounts.forEach(acc => {
-                if (acc.type === "asset" && !acc.isGroup && !acc.negative) {
-                    const bal = balances[acc.id];
-                    const amount = bal.type === "debit" ? bal.amount : 0;
-                    if (amount !== 0) assets.push({ name: acc.name, amount });
-                }
-                if (acc.type === "liability" && !acc.isGroup) {
-                    const bal = balances[acc.id];
-                    const amount = bal.type === "credit" ? bal.amount : 0;
-                    if (amount !== 0) liabilities.push({ name: acc.name, amount });
-                }
-                if (acc.type === "equity" && !acc.isGroup) {
-                    const bal = balances[acc.id];
-                    const amount = bal.type === "credit" ? bal.amount : 0;
-                    if (amount !== 0) equities.push({ name: acc.name, amount });
-                }
-            });
-            let totalAssets = assets.reduce((s, a) => s + a.amount, 0);
-            let totalLiabilities = liabilities.reduce((s, l) => s + l.amount, 0);
-            let totalEquity = equities.reduce((s, e) => s + e.amount, 0);
-            let totalRevenues = 0, totalExpenses = 0;
-            accounts.forEach(acc => {
-                if (acc.type === "income" && !acc.isGroup) {
-                    const bal = balances[acc.id];
-                    totalRevenues += bal.type === "credit" ? bal.amount : 0;
-                }
-                if (acc.type === "expense" && !acc.isGroup) {
-                    const bal = balances[acc.id];
-                    totalExpenses += bal.type === "debit" ? bal.amount : 0;
-                }
-            });
-            totalEquity += totalRevenues - totalExpenses;
-            let html = `<div class="card" id="balance-report"><div class="card-header"><h3><i class="fas fa-landmark"></i> المركز المالي (الميزانية العمومية)</h3><div class="print-hide">${permissions[currentUser.role]?.canExport ? '<button onclick="exportToPDF(\'balance-report\', \'balance_sheet\')" class="btn-success"><i class="fas fa-file-pdf"></i> PDF</button>' : ''}</div></div>
-                <div class="table-responsive"><table><thead><tr><th>البيان</th><th>المبلغ</th></tr></thead><tbody>
-                <tr style="background:#e3f2fd;"><td colspan="2"><strong>الأصول</strong></td></tr>${assets.map(a => `<tr><td style="padding-right:20px;">${a.name}</td><td>${a.amount.toFixed(2)}</td></tr>`).join("")}<tr style="background:#e3f2fd;"><td><strong>إجمالي الأصول</strong></td><td><strong>${totalAssets.toFixed(2)}</strong></td></tr>
-                <tr style="background:#e3f2fd;"><td colspan="2"><strong>الخصوم</strong></td></tr>${liabilities.map(l => `<tr><td style="padding-right:20px;">${l.name}</td><td>${l.amount.toFixed(2)}</td></tr>`).join("")}<tr style="background:#e3f2fd;"><td><strong>إجمالي الخصوم</strong></td><td><strong>${totalLiabilities.toFixed(2)}</strong></td></tr>
-                <tr style="background:#e3f2fd;"><td colspan="2"><strong>حقوق الملكية</strong></td></tr>${equities.map(e => `<tr><td style="padding-right:20px;">${e.name}</td><td>${e.amount.toFixed(2)}</td></tr>`).join("")}<tr><td style="padding-right:20px;">صافي الربح</td><td>${(totalRevenues - totalExpenses).toFixed(2)}</td></tr>
-                <tr style="background:#ffe0b3;"><td><strong>إجمالي حقوق الملكية</strong></td><td><strong>${totalEquity.toFixed(2)}</strong></td></tr>
-                <tr style="background:#e3f2fd;"><td><strong>الخصوم + حقوق الملكية</strong></td><td><strong>${(totalLiabilities + totalEquity).toFixed(2)}</strong></td></tr>
-                </tbody></table></div></div>`;
-            document.getElementById("mainContent").innerHTML = html;
-        }
-
-        // دوال للصفحات الأخرى المبسطة
-        function renderCashFlow() { document.getElementById("mainContent").innerHTML = `<div class="card"><div class="card-header"><h3>قائمة التدفقات النقدية</h3></div><p>جاري التطوير في الإصدار القادم</p></div>`; }
-        function renderEquityStatement() { document.getElementById("mainContent").innerHTML = `<div class="card"><div class="card-header"><h3>قائمة التغيرات في حقوق الملكية</h3></div><p>جاري التطوير في الإصدار القادم</p></div>`; }
-        function renderGeneralLedger() { document.getElementById("mainContent").innerHTML = `<div class="card"><div class="card-header"><h3>دفتر الأستاذ العام</h3></div><p>جاري التطوير في الإصدار القادم</p></div>`; }
-        function renderCustomersSuppliers() { document.getElementById("mainContent").innerHTML = `<div class="card"><div class="card-header"><h3>إدارة العملاء والموردين</h3></div><p>جاري التطوير في الإصدار القادم</p></div>`; }
-        function renderInventoryManagement() { document.getElementById("mainContent").innerHTML = `<div class="card"><div class="card-header"><h3>إدارة المخزون</h3></div><p>جاري التطوير في الإصدار القادم</p></div>`; }
-        function renderFixedAssets() { document.getElementById("mainContent").innerHTML = `<div class="card"><div class="card-header"><h3>الأصول الثابتة والإهلاك</h3></div><p>جاري التطوير في الإصدار القادم</p></div>`; }
-        function renderPayroll() { document.getElementById("mainContent").innerHTML = `<div class="card"><div class="card-header"><h3>إدارة الرواتب والموظفين</h3></div><p>جاري التطوير في الإصدار القادم</p></div>`; }
-        function renderBranches() { document.getElementById("mainContent").innerHTML = `<div class="card"><div class="card-header"><h3>إدارة الفروع والشركات</h3></div><p>جاري التطوير في الإصدار القادم</p></div>`; }
-        function renderFinancialRatios() { document.getElementById("mainContent").innerHTML = `<div class="card"><div class="card-header"><h3>النسب المالية</h3></div><p>جاري التطوير في الإصدار القادم</p></div>`; }
-        function renderAgingReport() { document.getElementById("mainContent").innerHTML = `<div class="card"><div class="card-header"><h3>تقارير الأعمار (عملاء/موردين)</h3></div><p>جاري التطوير في الإصدار القادم</p></div>`; }
-        function renderExportReports() { document.getElementById("mainContent").innerHTML = `<div class="card"><div class="card-header"><h3>تصدير التقارير</h3></div><p>جاري التطوير في الإصدار القادم</p></div>`; }
-        function renderSettings() { document.getElementById("mainContent").innerHTML = `<div class="card"><div class="card-header"><h3>إعدادات النظام</h3></div><p>جاري التطوير في الإصدار القادم</p></div>`; }
-        function renderUsersManagement() { document.getElementById("mainContent").innerHTML = `<div class="card"><div class="card-header"><h3>إدارة المستخدمين</h3></div><p>جاري التطوير في الإصدار القادم</p></div>`; }
-
-        // دليل الاستخدام الشامل
         function renderHelp() {
             const html = `<div class="card"><div class="card-header"><h3><i class="fas fa-question-circle"></i> دليل الاستخدام الشامل</h3></div>
-                <div style="padding:10px;"><h4>🔐 1. تسجيل الدخول</h4><p>استخدم admin / 123456 للدخول كمدير كامل الصلاحيات</p>
-                <h4>📝 2. إدخال القيد المحاسبي</h4><p>اختر "إدخال قيد" من القائمة، املأ البيانات وتأكد من توازن القيد</p>
-                <h4>📊 3. التقارير المالية</h4><p>ميزان المراجعة، قائمة الدخل متعددة المستويات، المركز المالي</p>
-                <h4>📎 4. التصدير</h4><p>اضغط على زر PDF أو Excel لتصدير أي تقرير</p>
-                <h4>💾 5. حفظ البيانات</h4><p>البيانات تُحفظ تلقائياً في متصفحك لكل مستخدم على حدة</p>
-                <h4>🏆 6. الميزات المتقدمة</h4><p>أكثر من 100 حساب، نظام عملاء وموردين، مخزون، أصول ثابتة، رواتب</p></div></div>`;
+                <div style="padding:10px;">
+                <h4>🔐 1. تسجيل الدخول</h4><p>admin / 123456 للصلاحيات الكاملة</p>
+                <h4>📝 2. إضافة حسابات جديدة</h4><p>من قائمة "إضافة حساب جديد" يمكنك إضافة أي حساب وسيظهر تلقائياً في القوائم المالية</p>
+                <h4>📊 3. قائمة الدخل متعددة المستويات</h4><p>تعرض: الإيرادات - تكلفة المبيعات = مجمل الربح - المصروفات التشغيلية = صافي الربح</p>
+                <h4>🏦 4. المركز المالي المفصل</h4><p>تعرض: الأصول المتداولة + الثابتة + الأخرى = إجمالي الأصول، الخصوم المتداولة + طويلة الأجل، حقوق الملكية</p>
+                <h4>📎 5. تصدير التقارير</h4><p>اضغط على PDF لتحويل أي تقرير إلى ملف PDF</p>
+                <h4>💾 6. حفظ البيانات</h4><p>البيانات تُحفظ تلقائياً لكل مستخدم</p>
+                </div></div>`;
             document.getElementById("mainContent").innerHTML = html;
+        }
+
+        function exportToPDF(elementId, filename) {
+            if (!permissions[currentUser.role]?.canExport) { showMessage("ليس لديك صلاحية للتصدير", "error"); return; }
+            const element = document.getElementById(elementId);
+            if (!element) { showMessage("لا يوجد بيانات للتصدير", "error"); return; }
+            html2pdf().set({ margin: 0.5, filename: `${filename}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } }).from(element).save();
+            showMessage(`تم تصدير ${filename}.pdf بنجاح`);
         }
 
         function switchPage(page) {
@@ -770,28 +681,21 @@
             if (activeItem) activeItem.classList.add("active");
             if (page === "dashboard") renderDashboard();
             else if (page === "chart-of-accounts") renderChartOfAccounts();
+            else if (page === "add-account") renderAddAccount();
             else if (page === "journal-entry") renderJournalEntry();
-            else if (page === "trial-balance") renderTrialBalance();
             else if (page === "income-statement") renderIncomeStatement();
             else if (page === "balance-sheet") renderBalanceSheet();
-            else if (page === "cash-flow") renderCashFlow();
-            else if (page === "equity-statement") renderEquityStatement();
-            else if (page === "general-ledger") renderGeneralLedger();
-            else if (page === "customers") renderCustomersSuppliers();
-            else if (page === "inventory") renderInventoryManagement();
-            else if (page === "fixed-assets") renderFixedAssets();
-            else if (page === "payroll") renderPayroll();
-            else if (page === "branches") renderBranches();
-            else if (page === "financial-ratios") renderFinancialRatios();
-            else if (page === "aging-report") renderAgingReport();
-            else if (page === "export-reports") renderExportReports();
-            else if (page === "users") renderUsersManagement();
-            else if (page === "settings") renderSettings();
+            else if (page === "trial-balance") renderTrialBalance();
             else if (page === "help") renderHelp();
             else renderDashboard();
         }
 
-        function loadUsers() { const saved = localStorage.getItem("system_users"); if (saved) users = JSON.parse(saved); }
+        const users = [
+            { id: 1, username: "admin", password: "123456", name: "مدير النظام", role: "admin", roleName: "مدير" },
+            { id: 2, username: "accountant", password: "123456", name: "محمد أحمد", role: "accountant", roleName: "محاسب" },
+            { id: 3, username: "viewer", password: "123456", name: "سعيد محمود", role: "viewer", roleName: "مشاهد" }
+        ];
+
         function attemptLogin() {
             const username = document.getElementById("loginUsername").value;
             const password = document.getElementById("loginPassword").value;
@@ -809,13 +713,13 @@
                 document.getElementById("loginError").style.display = "block";
             }
         }
+
         function logout() { saveAllData(); currentUser = null; document.getElementById("loginContainer").style.display = "flex"; document.getElementById("mainApp").style.display = "none"; }
 
-        loadUsers();
         document.querySelectorAll(".sidebar-item").forEach(item => { item.addEventListener("click", () => switchPage(item.dataset.page)); });
         document.getElementById("menuToggle").addEventListener("click", () => { document.getElementById("sidebar").classList.toggle("open"); });
         window.addEntryRow = addEntryRow; window.removeEntryRow = removeEntryRow; window.saveJournalEntry = saveJournalEntry;
-        window.exportToPDF = exportToPDF; window.exportToExcel = exportToExcel;
+        window.addNewAccount = addNewAccount; window.exportToPDF = exportToPDF;
     </script>
 </body>
 </html>
