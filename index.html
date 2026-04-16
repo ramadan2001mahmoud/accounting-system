@@ -341,28 +341,6 @@
             }
         }
 
-        function checkSavedSession() {
-            const savedUser = localStorage.getItem("currentUser");
-            if (savedUser) {
-                try {
-                    const userData = JSON.parse(savedUser);
-                    const foundUser = users.find(u => u.username === userData.username);
-                    if (foundUser) {
-                        currentUser = foundUser;
-                        document.getElementById("loginContainer").style.display = "none";
-                        document.getElementById("mainApp").style.display = "block";
-                        document.getElementById("currentUserName").innerHTML = `<i class="fas fa-user"></i> ${foundUser.name}`;
-                        document.getElementById("currentUserRole").innerHTML = `<i class="fas fa-shield-alt"></i> ${foundUser.roleName}`;
-                        loadUserData();
-                        renderDashboard();
-                        showMessage(`مرحباً بعودتك ${foundUser.name}`);
-                        return true;
-                    }
-                } catch(e) {}
-            }
-            return false;
-        }
-
         function updateYearBadge() {
             const badge = document.getElementById("currentYearBadge");
             if (badge && currentFiscalYear) {
@@ -827,4 +805,220 @@
                                     <th>اسم الحساب</th>
                                     <th>مدين</th>
                                     <th>دائن</th>
-                                
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${trialData.map(row => `
+                                    <tr>
+                                        <td>${row.code}</td>
+                                        <td class="account-name-cell">${row.name}</td>
+                                        <td style="text-align: left; font-family: monospace;">${row.debit > 0 ? row.debit.toFixed(2) : '-'}</td>
+                                        <td style="text-align: left; font-family: monospace;">${row.credit > 0 ? row.credit.toFixed(2) : '-'}</td>
+                                    </tr>
+                                `).join('')}
+                                <tr style="background: #ffe0b3; font-weight: bold;">
+                                    <td colspan="2"><strong>المجموع</strong></td>
+                                    <td style="text-align: left;"><strong>${totalDebit.toFixed(2)}</strong></td>
+                                    <td style="text-align: left;"><strong>${totalCredit.toFixed(2)}</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            document.getElementById("mainContent").innerHTML = html;
+        }
+
+        function exportTrialBalanceToExcel() {
+            const balances = calculateBalances();
+            let excelData = [];
+            for (let [id, bal] of Object.entries(balances)) {
+                if (bal.isGroup) continue;
+                const account = accounts.find(a => a.id === parseInt(id));
+                excelData.push({
+                    'رقم الحساب': account?.code || '',
+                    'اسم الحساب': bal.name,
+                    'مدين': bal.type === "debit" ? Math.abs(bal.amount) : 0,
+                    'دائن': bal.type === "credit" ? Math.abs(bal.amount) : 0
+                });
+            }
+            const ws = XLSX.utils.json_to_sheet(excelData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "ميزان المراجعة");
+            XLSX.writeFile(wb, `trial_balance_${currentFiscalYear?.name || 'current'}.xlsx`);
+            showMessage("تم تصدير ميزان المراجعة إلى Excel بنجاح");
+        }
+
+        // ====================== إدارة المستخدمين والصلاحيات ======================
+        function renderUserManagement() {
+            if (!getPermissions().canManageUsers) {
+                document.getElementById("mainContent").innerHTML = `<div class="card"><h3>غير مسموح</h3><p>ليس لديك صلاحية لإدارة المستخدمين</p></div>`;
+                return;
+            }
+            
+            let html = `
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-users-cog"></i> إدارة المستخدمين والصلاحيات</h3>
+                        <button onclick="showAddUserForm()" class="btn-success"><i class="fas fa-user-plus"></i> إضافة مستخدم</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr><th>اسم المستخدم</th><th>الاسم الكامل</th><th>الدور</th><th>الصلاحيات</th><th>الإجراءات</th></tr>
+                            </thead>
+                            <tbody>
+                                ${users.map(user => `
+                                    <tr>
+                                        <td>${user.username}</td>
+                                        <td>${user.name}</td>
+                                        <td>${user.roleName}</td>
+                                        <td>${user.role === 'admin' ? '🔓 كاملة' : (user.role === 'accountant' ? '📝 إدخال وتقارير' : '👁️ مشاهدة فقط')}</td>
+                                        <td class="action-buttons">
+                                            <button onclick="editUserRole(${user.id})" class="btn-info"><i class="fas fa-edit"></i> تعديل الصلاحية</button>
+                                            <button onclick="editUserName(${user.id})" class="btn-purple"><i class="fas fa-user-edit"></i> تعديل الاسم</button>
+                                            <button onclick="resetUserPassword(${user.id})" class="btn-warning"><i class="fas fa-key"></i> تغيير الباسورد</button>
+                                            ${user.username !== 'admin' ? `<button onclick="deleteUser(${user.id})" class="btn-danger"><i class="fas fa-trash"></i> حذف</button>` : ''}
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div id="addUserForm" style="display:none;" class="card">
+                    <h4>إضافة مستخدم جديد</h4>
+                    <div class="form-row">
+                        <div class="form-group"><input type="text" id="newUsername" placeholder="اسم المستخدم"></div>
+                        <div class="form-group"><input type="text" id="newName" placeholder="الاسم الكامل"></div>
+                        <div class="form-group"><input type="password" id="newPassword" placeholder="كلمة المرور"></div>
+                        <div class="form-group">
+                            <select id="newRole">
+                                <option value="accountant">محاسب</option>
+                                <option value="viewer">مشاهد</option>
+                            </select>
+                        </div>
+                        <div class="form-group"><button onclick="addUser()" class="btn-success">حفظ</button> <button onclick="hideAddUserForm()" class="btn-danger">إلغاء</button></div>
+                    </div>
+                </div>
+            `;
+            document.getElementById("mainContent").innerHTML = html;
+        }
+
+        function showAddUserForm() { document.getElementById("addUserForm").style.display = "block"; }
+        function hideAddUserForm() { document.getElementById("addUserForm").style.display = "none"; }
+
+        function addUser() {
+            const username = document.getElementById("newUsername").value.trim();
+            const name = document.getElementById("newName").value.trim();
+            const password = document.getElementById("newPassword").value;
+            const role = document.getElementById("newRole").value;
+            
+            if (!username || !name || !password) { showMessage("جميع الحقول مطلوبة", "error"); return; }
+            if (users.find(u => u.username === username)) { showMessage("اسم المستخدم موجود بالفعل", "error"); return; }
+            
+            const roleName = role === "accountant" ? "محاسب" : "مشاهد";
+            users.push({ id: Date.now(), username, password, name, role, roleName });
+            saveUsersData();
+            showMessage("تم إضافة المستخدم بنجاح");
+            renderUserManagement();
+        }
+
+        function editUserRole(id) {
+            const user = users.find(u => u.id === id);
+            if (!user) return;
+            const newRole = prompt("تعديل صلاحية المستخدم:\n1. admin (مدير)\n2. accountant (محاسب)\n3. viewer (مشاهد)", user.role);
+            if (newRole === "admin" || newRole === "accountant" || newRole === "viewer") {
+                user.role = newRole;
+                user.roleName = newRole === "admin" ? "مدير كامل الصلاحيات" : (newRole === "accountant" ? "محاسب" : "مشاهد");
+                saveUsersData();
+                showMessage("تم تعديل صلاحية المستخدم");
+                renderUserManagement();
+            }
+        }
+
+        function editUserName(id) {
+            const user = users.find(u => u.id === id);
+            if (!user) return;
+            const newName = prompt("تعديل اسم المستخدم:", user.name);
+            if (newName && newName.trim()) {
+                user.name = newName.trim();
+                saveUsersData();
+                showMessage("تم تعديل اسم المستخدم");
+                renderUserManagement();
+            }
+        }
+
+        function resetUserPassword(id) {
+            const user = users.find(u => u.id === id);
+            if (!user) return;
+            const newPassword = prompt("تغيير كلمة المرور للمستخدم " + user.username + ":", user.password);
+            if (newPassword && newPassword.trim()) {
+                user.password = newPassword.trim();
+                saveUsersData();
+                showMessage("تم تغيير كلمة المرور بنجاح");
+            }
+        }
+
+        function deleteUser(id) {
+            const user = users.find(u => u.id === id);
+            if (!user) return;
+            if (confirm(`هل أنت متأكد من حذف المستخدم "${user.name}"؟`)) {
+                users = users.filter(u => u.id !== id);
+                saveUsersData();
+                showMessage("تم حذف المستخدم بنجاح");
+                renderUserManagement();
+            }
+        }
+
+        // ====================== تغيير كلمة المرور ======================
+        function renderChangePassword() {
+            let html = `
+                <div class="card">
+                    <div class="card-header"><h3><i class="fas fa-key"></i> تغيير كلمة المرور</h3></div>
+                    <div class="form-group"><label>كلمة المرور الحالية</label><input type="password" id="oldPassword" placeholder="أدخل كلمة المرور الحالية"></div>
+                    <div class="form-group"><label>كلمة المرور الجديدة</label><input type="password" id="newPassword1" placeholder="أدخل كلمة المرور الجديدة"></div>
+                    <div class="form-group"><label>تأكيد كلمة المرور الجديدة</label><input type="password" id="newPassword2" placeholder="أعد إدخال كلمة المرور الجديدة"></div>
+                    <button onclick="changeMyPassword()" class="btn-success">تغيير كلمة المرور</button>
+                </div>
+            `;
+            document.getElementById("mainContent").innerHTML = html;
+        }
+
+        function changeMyPassword() {
+            const oldPass = document.getElementById("oldPassword").value;
+            const newPass1 = document.getElementById("newPassword1").value;
+            const newPass2 = document.getElementById("newPassword2").value;
+            
+            if (oldPass !== currentUser.password) { showMessage("كلمة المرور الحالية غير صحيحة", "error"); return; }
+            if (newPass1 !== newPass2) { showMessage("كلمة المرور الجديدة غير متطابقة", "error"); return; }
+            if (newPass1.length < 3) { showMessage("كلمة المرور قصيرة جداً (3 أحرف على الأقل)", "error"); return; }
+            
+            currentUser.password = newPass1;
+            const userIndex = users.findIndex(u => u.id === currentUser.id);
+            if (userIndex !== -1) users[userIndex].password = newPass1;
+            saveUsersData();
+            localStorage.setItem("currentUser", JSON.stringify({ username: currentUser.username, name: currentUser.name, role: currentUser.role, roleName: currentUser.roleName }));
+            showMessage("تم تغيير كلمة المرور بنجاح");
+            document.getElementById("oldPassword").value = "";
+            document.getElementById("newPassword1").value = "";
+            document.getElementById("newPassword2").value = "";
+        }
+
+        // ====================== باقي الدوال الأساسية ======================
+        function renderChartOfAccounts() {
+            let html = `<div class="card"><div class="card-header"><h3><i class="fas fa-tree"></i> شجرة الحسابات</h3><button onclick="switchPage('add-account')" class="btn-success"><i class="fas fa-plus"></i> إضافة حساب</button></div>
+                <div class="table-responsive"><table><thead><tr><th>الكود</th><th>اسم الحساب</th><th>النوع</th><th>تصنيف</th><th>دائم/مؤقت</th><th>الإجراءات</th></tr></thead><tbody>`;
+            accounts.filter(a => !a.isGroup).forEach(acc => {
+                const canEdit = getPermissions().canEditAccount;
+                const canDelete = getPermissions().canDeleteAccount;
+                html += `<tr>
+                    <td>${acc.code}</td>
+                    <td>${acc.name}</td>
+                    <td>${acc.type === 'asset' ? 'أصل' : acc.type === 'liability' ? 'خصم' : acc.type === 'equity' ? 'حقوق ملكية' : acc.type === 'income' ? 'إيراد' : 'مصروف'}</td>
+                    <td>${acc.category || '-'}</td>
+                    <td>${acc.isPermanent ? 'دائم (يرحل)' : 'مؤقت (يغلق)'}</td>
+                    <td class="action-buttons">
+                        ${canEdit ? `<button onclick="editAccountFromList(${acc.id})" class="btn-info"><i class="fas fa-edit"></i> تعديل</button>` : ''}
+                        ${canDelete ? `<button onclick="deleteAccountFromList(${acc.id})" class="btn-danger"><i class="fas fa-trash"></i> حذف</button>` : ''}
+                    
