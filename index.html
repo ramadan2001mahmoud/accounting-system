@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>النظام المحاسبي المتكامل - نظام أمان متكامل</title>
+    <title>النظام المحاسبي المتكامل - الإصدار النهائي</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -129,9 +129,6 @@
         .menu-toggle { display: none; background: none; border: none; font-size: 24px; color: white; cursor: pointer; }
         .action-buttons { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
         .chart-container { height: 300px; margin: 20px 0; }
-        .role-badge-admin { background: #dc3545; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; }
-        .role-badge-accountant { background: #ff9800; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; }
-        .role-badge-viewer { background: #28a745; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; }
         
         @media (max-width: 768px) {
             .sidebar { transform: translateX(100%); width: 260px; }
@@ -1005,20 +1002,20 @@
             document.getElementById("newPassword2").value = "";
         }
 
-        // ====================== باقي الدوال الأساسية ======================
-        function renderChartOfAccounts() {
-            let html = `<div class="card"><div class="card-header"><h3><i class="fas fa-tree"></i> شجرة الحسابات</h3><button onclick="switchPage('add-account')" class="btn-success"><i class="fas fa-plus"></i> إضافة حساب</button></div>
-                <div class="table-responsive"><table><thead><tr><th>الكود</th><th>اسم الحساب</th><th>النوع</th><th>تصنيف</th><th>دائم/مؤقت</th><th>الإجراءات</th></tr></thead><tbody>`;
-            accounts.filter(a => !a.isGroup).forEach(acc => {
-                const canEdit = getPermissions().canEditAccount;
-                const canDelete = getPermissions().canDeleteAccount;
+        // ====================== إدارة السنوات المالية ======================
+        function renderFiscalYears() {
+            let html = `<div class="card"><div class="card-header"><h3><i class="fas fa-calendar-alt"></i> إدارة السنوات المالية</h3>
+                <button onclick="showAddFiscalYearForm()" class="btn-success">+ إضافة سنة مالية جديدة</button></div>
+                <div class="table-responsive"><table><thead><tr><th>السنة</th><th>تاريخ البداية</th><th>تاريخ النهاية</th><th>الحالة</th><th>الإجراءات</th></tr></thead><tbody>`;
+            
+            fiscalYears.forEach(year => {
+                const isCurrent = currentFiscalYear?.id === year.id;
                 html += `<tr>
-                    <td>${acc.code}</td>
-                    <td>${acc.name}</td>
-                    <td>${acc.type === 'asset' ? 'أصل' : acc.type === 'liability' ? 'خصم' : acc.type === 'equity' ? 'حقوق ملكية' : acc.type === 'income' ? 'إيراد' : 'مصروف'}</td>
-                    <td>${acc.category || '-'}</td>
-                    <td>${acc.isPermanent ? 'دائم (يرحل)' : 'مؤقت (يغلق)'}</td>
+                    <td>${year.name}</td>
+                    <td>${year.startDate}</td>
+                    <td>${year.endDate}</td>
+                    <td>${year.isClosed ? '<span style="color:#dc3545">مغلقة</span>' : '<span style="color:#28a745">مفتوحة</span>'} ${isCurrent ? '<span class="year-badge">الحالية</span>' : ''}</td>
                     <td class="action-buttons">
-                        ${canEdit ? `<button onclick="editAccountFromList(${acc.id})" class="btn-info"><i class="fas fa-edit"></i> تعديل</button>` : ''}
-                        ${canDelete ? `<button onclick="deleteAccountFromList(${acc.id})" class="btn-danger"><i class="fas fa-trash"></i> حذف</button>` : ''}
+                        ${!year.isClosed && !isCurrent ? `<button onclick="switchToYear(${year.id})" class="btn-info">تبديل</button>` : ''}
+                        ${!year.isClosed && getPermissions().canCloseYear ? `<button onclick="prepareCloseYear(${year.id})" class="btn-warning">إقفال السنة</button>` : ''}
                     
