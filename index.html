@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>النظام المحاسبي المتكامل - الإصدار النهائي</title>
+    <title>النظام المحاسبي المتكامل - نظام أمان متكامل</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -80,7 +80,7 @@
         .stat-card .number { font-size: 28px; font-weight: 800; }
         .stat-card .label { font-size: 13px; opacity: 0.9; margin-top: 5px; }
         
-        /* الجداول - محسنة لميزان المراجعة */
+        /* الجداول */
         .table-responsive { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; }
         th, td { border: 1px solid #e0e0e0; padding: 12px; text-align: center; }
@@ -115,7 +115,6 @@
         .statement-row .account-name:hover { color: #1976d2; text-decoration: underline; }
         .statement-row .account-amount { font-family: monospace; font-size: 14px; font-weight: bold; margin-left: 15px; min-width: 100px; text-align: left; cursor: pointer; padding: 4px 8px; border-radius: 6px; }
         .statement-row .account-amount:hover { background: #e3f2fd; }
-        .statement-row .account-actions { display: flex; gap: 8px; }
         .statement-row.total { font-weight: bold; background: #f5f5f5; }
         .statement-row.double-total { font-weight: bold; background: #ffc107; color: #333; font-size: 1.05em; }
         .statement-row.highlight { background: #e8f5e9; font-weight: bold; }
@@ -130,6 +129,9 @@
         .menu-toggle { display: none; background: none; border: none; font-size: 24px; color: white; cursor: pointer; }
         .action-buttons { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
         .chart-container { height: 300px; margin: 20px 0; }
+        .role-badge-admin { background: #dc3545; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; }
+        .role-badge-accountant { background: #ff9800; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; }
+        .role-badge-viewer { background: #28a745; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; }
         
         @media (max-width: 768px) {
             .sidebar { transform: translateX(100%); width: 260px; }
@@ -146,7 +148,7 @@
     <div class="login-container" id="loginContainer">
         <div class="login-card">
             <h2><i class="fas fa-chart-line"></i> النظام المحاسبي المتكامل</h2>
-            <div class="subtitle">إدارة الشركات باحترافية - إصدار احترافي كامل</div>
+            <div class="subtitle">إدارة الشركات باحترافية - نظام أمان متكامل</div>
             <input type="text" id="loginUsername" placeholder="اسم المستخدم">
             <input type="password" id="loginPassword" placeholder="كلمة المرور">
             <button onclick="attemptLogin()"><i class="fas fa-sign-in-alt"></i> تسجيل الدخول</button>
@@ -195,6 +197,10 @@
             <div class="sidebar-item" data-page="balance-sheet"><i class="fas fa-landmark"></i><span>المركز المالي المفصل</span></div>
             <div class="sidebar-item" data-page="trial-balance"><i class="fas fa-balance-scale"></i><span>ميزان المراجعة</span></div>
             
+            <div class="sidebar-category"><i class="fas fa-shield-alt"></i> الأمان والإدارة</div>
+            <div class="sidebar-item" data-page="user-management"><i class="fas fa-users-cog"></i><span>إدارة المستخدمين والصلاحيات</span></div>
+            <div class="sidebar-item" data-page="change-password"><i class="fas fa-key"></i><span>تغيير كلمة المرور</span></div>
+            
             <div class="sidebar-category"><i class="fas fa-cog"></i> الإعدادات</div>
             <div class="sidebar-item" data-page="help"><i class="fas fa-question-circle"></i><span>دليل الاستخدام</span></div>
         </div>
@@ -204,11 +210,25 @@
     <div class="toast-message" id="toastMessage"></div>
 
     <script>
+        // ====================== نظام المستخدمين والصلاحيات ======================
+        let users = [
+            { id: 1, username: "admin", password: "123456", name: "مدير النظام", role: "admin", roleName: "مدير كامل الصلاحيات" },
+            { id: 2, username: "accountant", password: "123456", name: "محمد أحمد", role: "accountant", roleName: "محاسب" },
+            { id: 3, username: "viewer", password: "123456", name: "سعيد محمود", role: "viewer", roleName: "مشاهد" }
+        ];
+        
+        // صلاحيات المستخدمين
+        const rolePermissions = {
+            admin: { canAddEntry: true, canEditEntry: true, canDeleteEntry: true, canAddAccount: true, canEditAccount: true, canDeleteAccount: true, canExport: true, canEditSettings: true, canCloseYear: true, canEditStatementValues: true, canManageUsers: true },
+            accountant: { canAddEntry: true, canEditEntry: true, canDeleteEntry: false, canAddAccount: false, canEditAccount: false, canDeleteAccount: false, canExport: true, canEditSettings: false, canCloseYear: false, canEditStatementValues: false, canManageUsers: false },
+            viewer: { canAddEntry: false, canEditEntry: false, canDeleteEntry: false, canAddAccount: false, canEditAccount: false, canDeleteAccount: false, canExport: false, canEditSettings: false, canCloseYear: false, canEditStatementValues: false, canManageUsers: false }
+        };
+        
         // ====================== إعدادات النظام ======================
         let taxRate = 25;
         let sharesOutstanding = 10000;
         
-        // شجرة الحسابات مع تحديد الحسابات الدائمة والمؤقتة
+        // شجرة الحسابات
         let accounts = [
             { id: 1, code: "1000", name: "الأصول المتداولة", type: "asset", category: "currentAssets", isGroup: true, isPermanent: true },
             { id: 2, code: "1100", name: "النقدية والصندوق", type: "asset", category: "currentAssets", isGroup: false, isPermanent: true },
@@ -250,17 +270,15 @@
         let currentUser = null;
         let editingEntryId = null;
         let nextAccountId = 33;
-        
-        // متغيرات لإدخال القيد
         let entryRows = [{ accountId: "", debit: 0, credit: 0 }];
 
-        const permissions = {
-            admin: { canAddEntry: true, canEditEntry: true, canDeleteEntry: true, canAddAccount: true, canEditAccount: true, canDeleteAccount: true, canExport: true, canEditSettings: true, canCloseYear: true, canEditStatementValues: true },
-            accountant: { canAddEntry: true, canEditEntry: true, canDeleteEntry: false, canAddAccount: false, canEditAccount: false, canDeleteAccount: false, canExport: true, canEditSettings: false, canCloseYear: false, canEditStatementValues: false },
-            viewer: { canAddEntry: false, canEditEntry: false, canDeleteEntry: false, canAddAccount: false, canEditAccount: false, canDeleteAccount: false, canExport: false, canEditSettings: false, canCloseYear: false, canEditStatementValues: false }
-        };
+        // الحصول على صلاحيات المستخدم الحالي
+        function getPermissions() {
+            if (!currentUser) return {};
+            return rolePermissions[currentUser.role] || rolePermissions.viewer;
+        }
 
-        // ====================== وظائف الحفظ والتحميل مع تذكر الجلسة ======================
+        // تحميل بيانات المستخدم
         function loadUserData() {
             if (!currentUser) return;
             const prefix = `user_${currentUser.username}_`;
@@ -310,19 +328,37 @@
             localStorage.setItem(prefix + "sharesOutstanding", sharesOutstanding.toString());
         }
 
+        function saveUsersData() {
+            localStorage.setItem("system_users", JSON.stringify(users));
+        }
+
+        function loadUsersData() {
+            const savedUsers = localStorage.getItem("system_users");
+            if (savedUsers) {
+                users = JSON.parse(savedUsers);
+            } else {
+                saveUsersData();
+            }
+        }
+
         function checkSavedSession() {
             const savedUser = localStorage.getItem("currentUser");
             if (savedUser) {
-                const user = JSON.parse(savedUser);
-                currentUser = user;
-                document.getElementById("loginContainer").style.display = "none";
-                document.getElementById("mainApp").style.display = "block";
-                document.getElementById("currentUserName").innerHTML = `<i class="fas fa-user"></i> ${user.name}`;
-                document.getElementById("currentUserRole").innerHTML = `<i class="fas fa-shield-alt"></i> ${user.roleName}`;
-                loadUserData();
-                renderDashboard();
-                showMessage(`مرحباً بعودتك ${user.name}`);
-                return true;
+                try {
+                    const userData = JSON.parse(savedUser);
+                    const foundUser = users.find(u => u.username === userData.username);
+                    if (foundUser) {
+                        currentUser = foundUser;
+                        document.getElementById("loginContainer").style.display = "none";
+                        document.getElementById("mainApp").style.display = "block";
+                        document.getElementById("currentUserName").innerHTML = `<i class="fas fa-user"></i> ${foundUser.name}`;
+                        document.getElementById("currentUserRole").innerHTML = `<i class="fas fa-shield-alt"></i> ${foundUser.roleName}`;
+                        loadUserData();
+                        renderDashboard();
+                        showMessage(`مرحباً بعودتك ${foundUser.name}`);
+                        return true;
+                    }
+                } catch(e) {}
             }
             return false;
         }
@@ -346,7 +382,7 @@
             }
         }
 
-        // حساب الأرصدة مع الأرصدة الافتتاحية
+        // حساب الأرصدة
         function calculateBalances() {
             let balances = {};
             accounts.forEach(acc => { balances[acc.id] = { debit: 0, credit: 0 }; });
@@ -407,7 +443,7 @@
         }
 
         function editAccountValueInStatement(accountId, currentValue, category, callback) {
-            if (!permissions[currentUser.role]?.canEditStatementValues) {
+            if (!getPermissions().canEditStatementValues) {
                 showMessage("ليس لديك صلاحية لتعديل القيم", "error");
                 return;
             }
@@ -421,9 +457,8 @@
             }
         }
 
-        // دالة تعديل اسم الحساب من القوائم المالية
         function editAccountNameFromStatement(accountId, currentName) {
-            if (!permissions[currentUser.role]?.canEditAccount) {
+            if (!getPermissions().canEditAccount) {
                 showMessage("ليس لديك صلاحية لتعديل أسماء الحسابات", "error");
                 return;
             }
@@ -441,14 +476,12 @@
             }
         }
 
-        // دالة إضافة حساب جديد من القوائم المالية
         function addAccountToCategoryFromStatement(category, categoryName) {
-            if (!permissions[currentUser.role]?.canAddAccount) {
+            if (!getPermissions().canAddAccount) {
                 showMessage("ليس لديك صلاحية لإضافة حسابات", "error");
                 return;
             }
             
-            // تحديد نوع الحساب بناءً على التصنيف
             let type = "asset";
             let isPermanent = true;
             if (category === "operatingRevenue" || category === "nonOperatingIncome") {
@@ -488,7 +521,7 @@
             }
         }
 
-        // ====================== قائمة الدخل الشاملة ======================
+        // ====================== قائمة الدخل ======================
         function renderIncomeStatement() {
             const balances = calculateBalances();
             
@@ -535,9 +568,7 @@
                         <div class="statement-section">
                             <div class="statement-title">
                                 <span>أولاً: الإيرادات التشغيلية</span>
-                                <div class="section-actions">
-                                    <button onclick="addAccountToCategoryFromStatement('operatingRevenue', 'الإيرادات التشغيلية')" class="btn-success btn-small"><i class="fas fa-plus"></i> إضافة حساب</button>
-                                </div>
+                                ${getPermissions().canAddAccount ? `<div class="section-actions"><button onclick="addAccountToCategoryFromStatement('operatingRevenue', 'الإيرادات التشغيلية')" class="btn-success btn-small"><i class="fas fa-plus"></i> إضافة حساب</button></div>` : ''}
                             </div>
                             ${operatingRevenuesList.map(rev => `
                                 <div class="statement-row">
@@ -550,9 +581,7 @@
                         <div class="statement-section">
                             <div class="statement-title">
                                 <span>ثانياً: تكلفة المبيعات</span>
-                                <div class="section-actions">
-                                    <button onclick="addAccountToCategoryFromStatement('costOfSales', 'تكلفة المبيعات')" class="btn-success btn-small"><i class="fas fa-plus"></i> إضافة حساب</button>
-                                </div>
+                                ${getPermissions().canAddAccount ? `<div class="section-actions"><button onclick="addAccountToCategoryFromStatement('costOfSales', 'تكلفة المبيعات')" class="btn-success btn-small"><i class="fas fa-plus"></i> إضافة حساب</button></div>` : ''}
                             </div>
                             ${costOfSalesList.map(cost => `
                                 <div class="statement-row">
@@ -569,9 +598,7 @@
                         <div class="statement-section">
                             <div class="statement-title">
                                 <span>رابعاً: المصروفات التشغيلية</span>
-                                <div class="section-actions">
-                                    <button onclick="addAccountToCategoryFromStatement('operatingExpenses', 'المصروفات التشغيلية')" class="btn-success btn-small"><i class="fas fa-plus"></i> إضافة حساب</button>
-                                </div>
+                                ${getPermissions().canAddAccount ? `<div class="section-actions"><button onclick="addAccountToCategoryFromStatement('operatingExpenses', 'المصروفات التشغيلية')" class="btn-success btn-small"><i class="fas fa-plus"></i> إضافة حساب</button></div>` : ''}
                             </div>
                             ${operatingExpensesList.map(exp => `
                                 <div class="statement-row">
@@ -588,10 +615,8 @@
                         <div class="statement-section">
                             <div class="statement-title">
                                 <span>سادساً: العناصر غير التشغيلية</span>
-                                <div class="section-actions">
-                                    <button onclick="addAccountToCategoryFromStatement('nonOperatingIncome', 'الإيرادات غير التشغيلية')" class="btn-success btn-small"><i class="fas fa-plus"></i> إضافة إيراد</button>
-                                    <button onclick="addAccountToCategoryFromStatement('nonOperatingExpenses', 'المصروفات غير التشغيلية')" class="btn-danger btn-small"><i class="fas fa-plus"></i> إضافة مصروف</button>
-                                </div>
+                                ${getPermissions().canAddAccount ? `<div class="section-actions"><button onclick="addAccountToCategoryFromStatement('nonOperatingIncome', 'الإيرادات غير التشغيلية')" class="btn-success btn-small"><i class="fas fa-plus"></i> إضافة إيراد</button>
+                                <button onclick="addAccountToCategoryFromStatement('nonOperatingExpenses', 'المصروفات غير التشغيلية')" class="btn-danger btn-small"><i class="fas fa-plus"></i> إضافة مصروف</button></div>` : ''}
                             </div>
                             ${nonOperatingIncomeList.map(inc => `
                                 <div class="statement-row">
@@ -628,7 +653,7 @@
             document.getElementById("mainContent").innerHTML = html;
         }
 
-        // ====================== المركز المالي المفصل ======================
+        // ====================== المركز المالي ======================
         function renderBalanceSheet() {
             const balances = calculateBalances();
             
@@ -682,9 +707,7 @@
                         <div class="statement-section">
                             <div class="statement-title">
                                 <span>أولاً: الأصول المتداولة</span>
-                                <div class="section-actions">
-                                    <button onclick="addAccountToCategoryFromStatement('currentAssets', 'الأصول المتداولة')" class="btn-success btn-small"><i class="fas fa-plus"></i> إضافة حساب</button>
-                                </div>
+                                ${getPermissions().canAddAccount ? `<div class="section-actions"><button onclick="addAccountToCategoryFromStatement('currentAssets', 'الأصول المتداولة')" class="btn-success btn-small"><i class="fas fa-plus"></i> إضافة حساب</button></div>` : ''}
                             </div>
                             ${currentAssetsList.map(asset => `
                                 <div class="statement-row">
@@ -697,9 +720,7 @@
                         <div class="statement-section">
                             <div class="statement-title">
                                 <span>ثانياً: الأصول الثابتة</span>
-                                <div class="section-actions">
-                                    <button onclick="addAccountToCategoryFromStatement('fixedAssets', 'الأصول الثابتة')" class="btn-success btn-small"><i class="fas fa-plus"></i> إضافة حساب</button>
-                                </div>
+                                ${getPermissions().canAddAccount ? `<div class="section-actions"><button onclick="addAccountToCategoryFromStatement('fixedAssets', 'الأصول الثابتة')" class="btn-success btn-small"><i class="fas fa-plus"></i> إضافة حساب</button></div>` : ''}
                             </div>
                             ${fixedAssetsList.map(asset => `
                                 <div class="statement-row">
@@ -716,9 +737,7 @@
                         <div class="statement-section">
                             <div class="statement-title">
                                 <span>رابعاً: الخصوم المتداولة</span>
-                                <div class="section-actions">
-                                    <button onclick="addAccountToCategoryFromStatement('currentLiabilities', 'الخصوم المتداولة')" class="btn-success btn-small"><i class="fas fa-plus"></i> إضافة حساب</button>
-                                </div>
+                                ${getPermissions().canAddAccount ? `<div class="section-actions"><button onclick="addAccountToCategoryFromStatement('currentLiabilities', 'الخصوم المتداولة')" class="btn-success btn-small"><i class="fas fa-plus"></i> إضافة حساب</button></div>` : ''}
                             </div>
                             ${currentLiabilitiesList.map(liab => `
                                 <div class="statement-row">
@@ -731,9 +750,7 @@
                         <div class="statement-section">
                             <div class="statement-title">
                                 <span>خامساً: الخصوم طويلة الأجل</span>
-                                <div class="section-actions">
-                                    <button onclick="addAccountToCategoryFromStatement('longTermLiabilities', 'الخصوم طويلة الأجل')" class="btn-success btn-small"><i class="fas fa-plus"></i> إضافة حساب</button>
-                                </div>
+                                ${getPermissions().canAddAccount ? `<div class="section-actions"><button onclick="addAccountToCategoryFromStatement('longTermLiabilities', 'الخصوم طويلة الأجل')" class="btn-success btn-small"><i class="fas fa-plus"></i> إضافة حساب</button></div>` : ''}
                             </div>
                             ${longTermLiabilitiesList.map(liab => `
                                 <div class="statement-row">
@@ -750,9 +767,7 @@
                         <div class="statement-section">
                             <div class="statement-title">
                                 <span>سابعاً: حقوق الملكية</span>
-                                <div class="section-actions">
-                                    <button onclick="addAccountToCategoryFromStatement('equity', 'حقوق الملكية')" class="btn-success btn-small"><i class="fas fa-plus"></i> إضافة حساب</button>
-                                </div>
+                                ${getPermissions().canAddAccount ? `<div class="section-actions"><button onclick="addAccountToCategoryFromStatement('equity', 'حقوق الملكية')" class="btn-success btn-small"><i class="fas fa-plus"></i> إضافة حساب</button></div>` : ''}
                             </div>
                             ${equityList.map(eq => `
                                 <div class="statement-row">
@@ -812,58 +827,4 @@
                                     <th>اسم الحساب</th>
                                     <th>مدين</th>
                                     <th>دائن</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${trialData.map(row => `
-                                    <tr>
-                                        <td>${row.code}</td>
-                                        <td class="account-name-cell">${row.name}</td>
-                                        <td style="text-align: left; font-family: monospace;">${row.debit > 0 ? row.debit.toFixed(2) : '-'}</td>
-                                        <td style="text-align: left; font-family: monospace;">${row.credit > 0 ? row.credit.toFixed(2) : '-'}</td>
-                                    </tr>
-                                `).join('')}
-                                <tr style="background: #ffe0b3; font-weight: bold;">
-                                    <td colspan="2"><strong>المجموع</strong></td>
-                                    <td style="text-align: left;"><strong>${totalDebit.toFixed(2)}</strong></td>
-                                    <td style="text-align: left;"><strong>${totalCredit.toFixed(2)}</strong></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            `;
-            document.getElementById("mainContent").innerHTML = html;
-        }
-
-        function exportTrialBalanceToExcel() {
-            const balances = calculateBalances();
-            let excelData = [];
-            for (let [id, bal] of Object.entries(balances)) {
-                if (bal.isGroup) continue;
-                const account = accounts.find(a => a.id === parseInt(id));
-                excelData.push({
-                    'رقم الحساب': account?.code || '',
-                    'اسم الحساب': bal.name,
-                    'مدين': bal.type === "debit" ? Math.abs(bal.amount) : 0,
-                    'دائن': bal.type === "credit" ? Math.abs(bal.amount) : 0
-                });
-            }
-            const ws = XLSX.utils.json_to_sheet(excelData);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "ميزان المراجعة");
-            XLSX.writeFile(wb, `trial_balance_${currentFiscalYear?.name || 'current'}.xlsx`);
-            showMessage("تم تصدير ميزان المراجعة إلى Excel بنجاح");
-        }
-
-        // ====================== باقي الدوال (محفوظة كما هي من آخر إصدار) ======================
-        
-        function renderChartOfAccounts() {
-            let html = `<div class="card"><div class="card-header"><h3><i class="fas fa-tree"></i> شجرة الحسابات</h3><button onclick="switchPage('add-account')" class="btn-success"><i class="fas fa-plus"></i> إضافة حساب</button></div>
-                <div class="table-responsive"><table><thead><tr><th>الكود</th><th>اسم الحساب</th><th>النوع</th><th>تصنيف</th><th>دائم/مؤقت</th><th>الإجراءات</th></tr></thead><tbody>`;
-            accounts.filter(a => !a.isGroup).forEach(acc => {
-                const canEdit = permissions[currentUser.role]?.canEditAccount;
-                const canDelete = permissions[currentUser.role]?.canDeleteAccount;
-                html += `<tr>
-                    <td>${acc.code}</td>
-                    <td>${acc.name}
+                                
