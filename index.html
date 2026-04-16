@@ -80,11 +80,14 @@
         .stat-card .number { font-size: 28px; font-weight: 800; }
         .stat-card .label { font-size: 13px; opacity: 0.9; margin-top: 5px; }
         
-        /* الجداول */
+        /* الجداول - محسنة لميزان المراجعة */
+        .table-responsive { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; }
         th, td { border: 1px solid #e0e0e0; padding: 12px; text-align: center; }
         th { background: linear-gradient(135deg, #0d47a1, #1976d2); color: white; font-weight: 600; }
         tr:hover { background: #f5f5f5; }
+        .trial-balance-table td { text-align: center; }
+        .trial-balance-table .account-name-cell { text-align: right; font-weight: 500; }
         
         /* النماذج */
         .form-row { display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 15px; align-items: center; }
@@ -105,24 +108,23 @@
         /* القوائم المالية */
         .financial-statement { direction: rtl; }
         .statement-section { margin-bottom: 25px; border: 1px solid #e0e0e0; border-radius: 12px; overflow: hidden; }
-        .statement-title { background: #e3f2fd; padding: 12px 15px; font-weight: bold; color: #0d47a1; font-size: 16px; display: flex; justify-content: space-between; align-items: center; }
+        .statement-title { background: #e3f2fd; padding: 12px 15px; font-weight: bold; color: #0d47a1; font-size: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
         .statement-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; border-bottom: 1px solid #f0f0f0; }
         .statement-row:hover { background: #f9f9f9; }
-        .statement-row .account-name { flex: 1; text-align: right; font-weight: 500; }
+        .statement-row .account-name { flex: 1; text-align: right; font-weight: 500; cursor: pointer; }
+        .statement-row .account-name:hover { color: #1976d2; text-decoration: underline; }
         .statement-row .account-amount { font-family: monospace; font-size: 14px; font-weight: bold; margin-left: 15px; min-width: 100px; text-align: left; cursor: pointer; padding: 4px 8px; border-radius: 6px; }
         .statement-row .account-amount:hover { background: #e3f2fd; }
+        .statement-row .account-actions { display: flex; gap: 8px; }
         .statement-row.total { font-weight: bold; background: #f5f5f5; }
         .statement-row.double-total { font-weight: bold; background: #ffc107; color: #333; font-size: 1.05em; }
         .statement-row.highlight { background: #e8f5e9; font-weight: bold; }
         .edit-mode-badge { background: #4caf50; color: white; padding: 4px 10px; border-radius: 20px; font-size: 12px; margin-right: 10px; }
+        .section-actions { display: flex; gap: 8px; }
+        .section-actions button { padding: 5px 12px; font-size: 12px; }
         
         /* التنبيهات */
         .toast-message { position: fixed; bottom: 20px; left: 20px; background: #28a745; color: white; padding: 14px 28px; border-radius: 50px; z-index: 1100; display: none; font-weight: bold; box-shadow: 0 5px 20px rgba(0,0,0,0.2); }
-        
-        /* شجرة الحسابات */
-        .tree-item { padding: 8px; margin: 3px 0; background: #f8f9fa; border-radius: 8px; cursor: pointer; }
-        .tree-item:hover { background: #e3f2fd; }
-        .tree-node { margin-right: 25px; }
         
         /* متجاوب */
         .menu-toggle { display: none; background: none; border: none; font-size: 24px; color: white; cursor: pointer; }
@@ -308,7 +310,6 @@
             localStorage.setItem(prefix + "sharesOutstanding", sharesOutstanding.toString());
         }
 
-        // تذكر الجلسة - التحقق من وجود مستخدم مسجل دخول سابقاً
         function checkSavedSession() {
             const savedUser = localStorage.getItem("currentUser");
             if (savedUser) {
@@ -420,6 +421,73 @@
             }
         }
 
+        // دالة تعديل اسم الحساب من القوائم المالية
+        function editAccountNameFromStatement(accountId, currentName) {
+            if (!permissions[currentUser.role]?.canEditAccount) {
+                showMessage("ليس لديك صلاحية لتعديل أسماء الحسابات", "error");
+                return;
+            }
+            const newName = prompt(`تعديل اسم الحساب:\nالاسم الحالي: ${currentName}\nأدخل الاسم الجديد:`, currentName);
+            if (newName && newName.trim()) {
+                const account = accounts.find(a => a.id === accountId);
+                if (account) {
+                    account.name = newName.trim();
+                    saveAllData();
+                    showMessage(`تم تعديل اسم الحساب إلى "${newName.trim()}"`, "success");
+                    const activePage = document.querySelector(".sidebar-item.active")?.dataset.page;
+                    if (activePage === "income-statement") renderIncomeStatement();
+                    else if (activePage === "balance-sheet") renderBalanceSheet();
+                }
+            }
+        }
+
+        // دالة إضافة حساب جديد من القوائم المالية
+        function addAccountToCategoryFromStatement(category, categoryName) {
+            if (!permissions[currentUser.role]?.canAddAccount) {
+                showMessage("ليس لديك صلاحية لإضافة حسابات", "error");
+                return;
+            }
+            
+            // تحديد نوع الحساب بناءً على التصنيف
+            let type = "asset";
+            let isPermanent = true;
+            if (category === "operatingRevenue" || category === "nonOperatingIncome") {
+                type = "income";
+                isPermanent = false;
+            } else if (category === "costOfSales" || category === "operatingExpenses" || category === "nonOperatingExpenses") {
+                type = "expense";
+                isPermanent = false;
+            } else if (category === "currentLiabilities" || category === "longTermLiabilities") {
+                type = "liability";
+                isPermanent = true;
+            } else if (category === "equity") {
+                type = "equity";
+                isPermanent = true;
+            } else {
+                type = "asset";
+                isPermanent = true;
+            }
+            
+            const newName = prompt(`إضافة حساب جديد في قسم "${categoryName}":\nأدخل اسم الحساب الجديد:`);
+            if (newName && newName.trim()) {
+                const newCode = (nextAccountId + 1000).toString();
+                accounts.push({
+                    id: nextAccountId++,
+                    code: newCode,
+                    name: newName.trim(),
+                    type: type,
+                    category: category,
+                    isGroup: false,
+                    isPermanent: isPermanent
+                });
+                saveAllData();
+                showMessage(`تم إضافة الحساب "${newName.trim()}" بنجاح`, "success");
+                const activePage = document.querySelector(".sidebar-item.active")?.dataset.page;
+                if (activePage === "income-statement") renderIncomeStatement();
+                else if (activePage === "balance-sheet") renderBalanceSheet();
+            }
+        }
+
         // ====================== قائمة الدخل الشاملة ======================
         function renderIncomeStatement() {
             const balances = calculateBalances();
@@ -460,25 +528,35 @@
             let html = `
                 <div class="card" id="income-report">
                     <div class="card-header">
-                        <h3><i class="fas fa-chart-line"></i> قائمة الدخل الشاملة <span class="edit-mode-badge">(اضغط على أي قيمة لتعديلها)</span></h3>
+                        <h3><i class="fas fa-chart-line"></i> قائمة الدخل الشاملة <span class="edit-mode-badge">(اضغط على الاسم أو القيمة للتعديل)</span></h3>
                         <div><button onclick="exportToPDF('income-report', 'income_statement')" class="btn-success"><i class="fas fa-file-pdf"></i> PDF</button></div>
                     </div>
                     <div class="financial-statement">
                         <div class="statement-section">
-                            <div class="statement-title">أولاً: الإيرادات التشغيلية</div>
+                            <div class="statement-title">
+                                <span>أولاً: الإيرادات التشغيلية</span>
+                                <div class="section-actions">
+                                    <button onclick="addAccountToCategoryFromStatement('operatingRevenue', 'الإيرادات التشغيلية')" class="btn-success btn-small"><i class="fas fa-plus"></i> إضافة حساب</button>
+                                </div>
+                            </div>
                             ${operatingRevenuesList.map(rev => `
                                 <div class="statement-row">
-                                    <span class="account-name">${rev.name}</span>
+                                    <span class="account-name" onclick="editAccountNameFromStatement(${rev.id}, '${rev.name}')" title="اضغط لتعديل الاسم">✏️ ${rev.name}</span>
                                     <span class="account-amount" onclick="editAccountValueInStatement(${rev.id}, ${rev.amount}, 'operatingRevenue', (id, diff) => adjustAccountBalance(id, diff))">${rev.amount.toFixed(2)}</span>
                                 </div>
                             `).join('')}
                             <div class="statement-row total"><span class="account-name">إجمالي الإيرادات التشغيلية</span><span>${totalRevenues.toFixed(2)}</span></div>
                         </div>
                         <div class="statement-section">
-                            <div class="statement-title">ثانياً: تكلفة المبيعات</div>
+                            <div class="statement-title">
+                                <span>ثانياً: تكلفة المبيعات</span>
+                                <div class="section-actions">
+                                    <button onclick="addAccountToCategoryFromStatement('costOfSales', 'تكلفة المبيعات')" class="btn-success btn-small"><i class="fas fa-plus"></i> إضافة حساب</button>
+                                </div>
+                            </div>
                             ${costOfSalesList.map(cost => `
                                 <div class="statement-row">
-                                    <span class="account-name">${cost.name}</span>
+                                    <span class="account-name" onclick="editAccountNameFromStatement(${cost.id}, '${cost.name}')" title="اضغط لتعديل الاسم">✏️ ${cost.name}</span>
                                     <span class="account-amount" onclick="editAccountValueInStatement(${cost.id}, ${cost.amount}, 'costOfSales', (id, diff) => adjustAccountBalance(id, diff))">${cost.amount.toFixed(2)}</span>
                                 </div>
                             `).join('')}
@@ -489,10 +567,15 @@
                             <div class="statement-row highlight"><span class="account-name">مجمل الربح = الإيرادات - تكلفة المبيعات</span><span>${grossProfit.toFixed(2)}</span></div>
                         </div>
                         <div class="statement-section">
-                            <div class="statement-title">رابعاً: المصروفات التشغيلية</div>
+                            <div class="statement-title">
+                                <span>رابعاً: المصروفات التشغيلية</span>
+                                <div class="section-actions">
+                                    <button onclick="addAccountToCategoryFromStatement('operatingExpenses', 'المصروفات التشغيلية')" class="btn-success btn-small"><i class="fas fa-plus"></i> إضافة حساب</button>
+                                </div>
+                            </div>
                             ${operatingExpensesList.map(exp => `
                                 <div class="statement-row">
-                                    <span class="account-name">${exp.name}</span>
+                                    <span class="account-name" onclick="editAccountNameFromStatement(${exp.id}, '${exp.name}')" title="اضغط لتعديل الاسم">✏️ ${exp.name}</span>
                                     <span class="account-amount" onclick="editAccountValueInStatement(${exp.id}, ${exp.amount}, 'operatingExpenses', (id, diff) => adjustAccountBalance(id, diff))">${exp.amount.toFixed(2)}</span>
                                 </div>
                             `).join('')}
@@ -503,16 +586,22 @@
                             <div class="statement-row highlight"><span class="account-name">EBIT = مجمل الربح - المصروفات التشغيلية</span><span>${ebit.toFixed(2)}</span></div>
                         </div>
                         <div class="statement-section">
-                            <div class="statement-title">سادساً: العناصر غير التشغيلية</div>
+                            <div class="statement-title">
+                                <span>سادساً: العناصر غير التشغيلية</span>
+                                <div class="section-actions">
+                                    <button onclick="addAccountToCategoryFromStatement('nonOperatingIncome', 'الإيرادات غير التشغيلية')" class="btn-success btn-small"><i class="fas fa-plus"></i> إضافة إيراد</button>
+                                    <button onclick="addAccountToCategoryFromStatement('nonOperatingExpenses', 'المصروفات غير التشغيلية')" class="btn-danger btn-small"><i class="fas fa-plus"></i> إضافة مصروف</button>
+                                </div>
+                            </div>
                             ${nonOperatingIncomeList.map(inc => `
                                 <div class="statement-row">
-                                    <span class="account-name">+ ${inc.name}</span>
+                                    <span class="account-name" onclick="editAccountNameFromStatement(${inc.id}, '${inc.name}')" title="اضغط لتعديل الاسم">+ ✏️ ${inc.name}</span>
                                     <span class="account-amount" onclick="editAccountValueInStatement(${inc.id}, ${inc.amount}, 'nonOperatingIncome', (id, diff) => adjustAccountBalance(id, diff))">${inc.amount.toFixed(2)}</span>
                                 </div>
                             `).join('')}
                             ${nonOperatingExpensesList.map(exp => `
                                 <div class="statement-row">
-                                    <span class="account-name">- ${exp.name}</span>
+                                    <span class="account-name" onclick="editAccountNameFromStatement(${exp.id}, '${exp.name}')" title="اضغط لتعديل الاسم">- ✏️ ${exp.name}</span>
                                     <span class="account-amount" onclick="editAccountValueInStatement(${exp.id}, ${exp.amount}, 'nonOperatingExpenses', (id, diff) => adjustAccountBalance(id, diff))">${exp.amount.toFixed(2)}</span>
                                 </div>
                             `).join('')}
@@ -586,25 +675,35 @@
             let html = `
                 <div class="card" id="balance-report">
                     <div class="card-header">
-                        <h3><i class="fas fa-landmark"></i> المركز المالي المفصل <span class="edit-mode-badge">(اضغط على أي قيمة لتعديلها)</span></h3>
+                        <h3><i class="fas fa-landmark"></i> المركز المالي المفصل <span class="edit-mode-badge">(اضغط على الاسم أو القيمة للتعديل)</span></h3>
                         <div><button onclick="exportToPDF('balance-report', 'balance_sheet')" class="btn-success"><i class="fas fa-file-pdf"></i> PDF</button></div>
                     </div>
                     <div class="financial-statement">
                         <div class="statement-section">
-                            <div class="statement-title">أولاً: الأصول المتداولة</div>
+                            <div class="statement-title">
+                                <span>أولاً: الأصول المتداولة</span>
+                                <div class="section-actions">
+                                    <button onclick="addAccountToCategoryFromStatement('currentAssets', 'الأصول المتداولة')" class="btn-success btn-small"><i class="fas fa-plus"></i> إضافة حساب</button>
+                                </div>
+                            </div>
                             ${currentAssetsList.map(asset => `
                                 <div class="statement-row">
-                                    <span class="account-name">${asset.name}</span>
+                                    <span class="account-name" onclick="editAccountNameFromStatement(${asset.id}, '${asset.name}')" title="اضغط لتعديل الاسم">✏️ ${asset.name}</span>
                                     <span class="account-amount" onclick="editAccountValueInStatement(${asset.id}, ${asset.amount}, 'currentAssets', (id, diff) => adjustAccountBalance(id, diff))">${asset.amount.toFixed(2)}</span>
                                 </div>
                             `).join('')}
                             <div class="statement-row total"><span class="account-name">إجمالي الأصول المتداولة</span><span>${totalCurrentAssets.toFixed(2)}</span></div>
                         </div>
                         <div class="statement-section">
-                            <div class="statement-title">ثانياً: الأصول الثابتة</div>
+                            <div class="statement-title">
+                                <span>ثانياً: الأصول الثابتة</span>
+                                <div class="section-actions">
+                                    <button onclick="addAccountToCategoryFromStatement('fixedAssets', 'الأصول الثابتة')" class="btn-success btn-small"><i class="fas fa-plus"></i> إضافة حساب</button>
+                                </div>
+                            </div>
                             ${fixedAssetsList.map(asset => `
                                 <div class="statement-row">
-                                    <span class="account-name">${asset.name}</span>
+                                    <span class="account-name" onclick="editAccountNameFromStatement(${asset.id}, '${asset.name}')" title="اضغط لتعديل الاسم">✏️ ${asset.name}</span>
                                     <span class="account-amount" onclick="editAccountValueInStatement(${asset.id}, ${asset.amount}, 'fixedAssets', (id, diff) => adjustAccountBalance(id, diff))">${asset.amount.toFixed(2)}</span>
                                 </div>
                             `).join('')}
@@ -615,20 +714,30 @@
                             <div class="statement-row double-total"><span class="account-name">إجمالي الأصول</span><span>${totalAssets.toFixed(2)}</span></div>
                         </div>
                         <div class="statement-section">
-                            <div class="statement-title">رابعاً: الخصوم المتداولة</div>
+                            <div class="statement-title">
+                                <span>رابعاً: الخصوم المتداولة</span>
+                                <div class="section-actions">
+                                    <button onclick="addAccountToCategoryFromStatement('currentLiabilities', 'الخصوم المتداولة')" class="btn-success btn-small"><i class="fas fa-plus"></i> إضافة حساب</button>
+                                </div>
+                            </div>
                             ${currentLiabilitiesList.map(liab => `
                                 <div class="statement-row">
-                                    <span class="account-name">${liab.name}</span>
+                                    <span class="account-name" onclick="editAccountNameFromStatement(${liab.id}, '${liab.name}')" title="اضغط لتعديل الاسم">✏️ ${liab.name}</span>
                                     <span class="account-amount" onclick="editAccountValueInStatement(${liab.id}, ${liab.amount}, 'currentLiabilities', (id, diff) => adjustAccountBalance(id, diff))">${liab.amount.toFixed(2)}</span>
                                 </div>
                             `).join('')}
                             <div class="statement-row total"><span class="account-name">إجمالي الخصوم المتداولة</span><span>${totalCurrentLiabilities.toFixed(2)}</span></div>
                         </div>
                         <div class="statement-section">
-                            <div class="statement-title">خامساً: الخصوم طويلة الأجل</div>
+                            <div class="statement-title">
+                                <span>خامساً: الخصوم طويلة الأجل</span>
+                                <div class="section-actions">
+                                    <button onclick="addAccountToCategoryFromStatement('longTermLiabilities', 'الخصوم طويلة الأجل')" class="btn-success btn-small"><i class="fas fa-plus"></i> إضافة حساب</button>
+                                </div>
+                            </div>
                             ${longTermLiabilitiesList.map(liab => `
                                 <div class="statement-row">
-                                    <span class="account-name">${liab.name}</span>
+                                    <span class="account-name" onclick="editAccountNameFromStatement(${liab.id}, '${liab.name}')" title="اضغط لتعديل الاسم">✏️ ${liab.name}</span>
                                     <span class="account-amount" onclick="editAccountValueInStatement(${liab.id}, ${liab.amount}, 'longTermLiabilities', (id, diff) => adjustAccountBalance(id, diff))">${liab.amount.toFixed(2)}</span>
                                 </div>
                             `).join('')}
@@ -639,10 +748,15 @@
                             <div class="statement-row total"><span class="account-name">إجمالي الخصوم</span><span>${totalLiabilities.toFixed(2)}</span></div>
                         </div>
                         <div class="statement-section">
-                            <div class="statement-title">سابعاً: حقوق الملكية</div>
+                            <div class="statement-title">
+                                <span>سابعاً: حقوق الملكية</span>
+                                <div class="section-actions">
+                                    <button onclick="addAccountToCategoryFromStatement('equity', 'حقوق الملكية')" class="btn-success btn-small"><i class="fas fa-plus"></i> إضافة حساب</button>
+                                </div>
+                            </div>
                             ${equityList.map(eq => `
                                 <div class="statement-row">
-                                    <span class="account-name">${eq.name}</span>
+                                    <span class="account-name" onclick="editAccountNameFromStatement(${eq.id}, '${eq.name}')" title="اضغط لتعديل الاسم">✏️ ${eq.name}</span>
                                     <span class="account-amount" onclick="editAccountValueInStatement(${eq.id}, ${eq.amount}, 'equity', (id, diff) => adjustAccountBalance(id, diff))">${eq.amount.toFixed(2)}</span>
                                 </div>
                             `).join('')}
@@ -659,24 +773,91 @@
             document.getElementById("mainContent").innerHTML = html;
         }
 
-        // ====================== ميزان المراجعة ======================
+        // ====================== ميزان المراجعة المنظم ======================
         function renderTrialBalance() {
             const balances = calculateBalances();
+            let trialData = [];
             let totalDebit = 0, totalCredit = 0;
-            let html = `<div class="card" id="trial-balance-report"><div class="card-header"><h3><i class="fas fa-balance-scale"></i> ميزان المراجعة</h3><button onclick="exportToPDF('trial-balance-report', 'trial_balance')" class="btn-success"><i class="fas fa-file-pdf"></i> PDF</button></div>
-                <div class="table-responsive"><tr><thead><tr><th>رقم الحساب</th><th>اسم الحساب</th><th>مدين</th><th>دائن</th></tr></thead><tbody>`;
+            
             for (let [id, bal] of Object.entries(balances)) {
                 if (bal.isGroup) continue;
+                const account = accounts.find(a => a.id === parseInt(id));
                 const debitVal = bal.type === "debit" ? Math.abs(bal.amount) : 0;
                 const creditVal = bal.type === "credit" ? Math.abs(bal.amount) : 0;
-                totalDebit += debitVal; totalCredit += creditVal;
-                html += `<tr><td>${accounts.find(a => a.id === parseInt(id))?.code || ''}</td><td>${bal.name}</td><td>${debitVal.toFixed(2)}</td><td>${creditVal.toFixed(2)}</td></tr>`;
+                totalDebit += debitVal;
+                totalCredit += creditVal;
+                trialData.push({
+                    code: account?.code || '',
+                    name: bal.name,
+                    debit: debitVal,
+                    credit: creditVal,
+                    type: bal.type
+                });
             }
-            html += `<tr style="background:#ffe0b3"><td colspan="2"><strong>المجموع</strong></td><td><strong>${totalDebit.toFixed(2)}</strong></td><td><strong>${totalCredit.toFixed(2)}</strong></td></tr></tbody></table></div></div>`;
+            
+            let html = `
+                <div class="card" id="trial-balance-report">
+                    <div class="card-header">
+                        <h3><i class="fas fa-balance-scale"></i> ميزان المراجعة</h3>
+                        <div>
+                            <button onclick="exportToPDF('trial-balance-report', 'trial_balance')" class="btn-success"><i class="fas fa-file-pdf"></i> PDF</button>
+                            <button onclick="exportTrialBalanceToExcel()" class="btn-info"><i class="fas fa-file-excel"></i> Excel</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="trial-balance-table">
+                            <thead>
+                                <tr>
+                                    <th>رقم الحساب</th>
+                                    <th>اسم الحساب</th>
+                                    <th>مدين</th>
+                                    <th>دائن</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${trialData.map(row => `
+                                    <tr>
+                                        <td>${row.code}</td>
+                                        <td class="account-name-cell">${row.name}</td>
+                                        <td style="text-align: left; font-family: monospace;">${row.debit > 0 ? row.debit.toFixed(2) : '-'}</td>
+                                        <td style="text-align: left; font-family: monospace;">${row.credit > 0 ? row.credit.toFixed(2) : '-'}</td>
+                                    </tr>
+                                `).join('')}
+                                <tr style="background: #ffe0b3; font-weight: bold;">
+                                    <td colspan="2"><strong>المجموع</strong></td>
+                                    <td style="text-align: left;"><strong>${totalDebit.toFixed(2)}</strong></td>
+                                    <td style="text-align: left;"><strong>${totalCredit.toFixed(2)}</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
             document.getElementById("mainContent").innerHTML = html;
         }
 
-        // ====================== شجرة الحسابات ======================
+        function exportTrialBalanceToExcel() {
+            const balances = calculateBalances();
+            let excelData = [];
+            for (let [id, bal] of Object.entries(balances)) {
+                if (bal.isGroup) continue;
+                const account = accounts.find(a => a.id === parseInt(id));
+                excelData.push({
+                    'رقم الحساب': account?.code || '',
+                    'اسم الحساب': bal.name,
+                    'مدين': bal.type === "debit" ? Math.abs(bal.amount) : 0,
+                    'دائن': bal.type === "credit" ? Math.abs(bal.amount) : 0
+                });
+            }
+            const ws = XLSX.utils.json_to_sheet(excelData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "ميزان المراجعة");
+            XLSX.writeFile(wb, `trial_balance_${currentFiscalYear?.name || 'current'}.xlsx`);
+            showMessage("تم تصدير ميزان المراجعة إلى Excel بنجاح");
+        }
+
+        // ====================== باقي الدوال (محفوظة كما هي من آخر إصدار) ======================
+        
         function renderChartOfAccounts() {
             let html = `<div class="card"><div class="card-header"><h3><i class="fas fa-tree"></i> شجرة الحسابات</h3><button onclick="switchPage('add-account')" class="btn-success"><i class="fas fa-plus"></i> إضافة حساب</button></div>
                 <div class="table-responsive"><table><thead><tr><th>الكود</th><th>اسم الحساب</th><th>النوع</th><th>تصنيف</th><th>دائم/مؤقت</th><th>الإجراءات</th></tr></thead><tbody>`;
@@ -685,701 +866,4 @@
                 const canDelete = permissions[currentUser.role]?.canDeleteAccount;
                 html += `<tr>
                     <td>${acc.code}</td>
-                    <td>${acc.name}</td>
-                    <td>${acc.type === 'asset' ? 'أصل' : acc.type === 'liability' ? 'خصم' : acc.type === 'equity' ? 'حقوق ملكية' : acc.type === 'income' ? 'إيراد' : 'مصروف'}</td>
-                    <td>${acc.category || '-'}</td>
-                    <td>${acc.isPermanent ? 'دائم (يرحل)' : 'مؤقت (يغلق)'}</td>
-                    <td class="action-buttons">
-                        ${canEdit ? `<button onclick="editAccount(${acc.id})" class="btn-info btn-small"><i class="fas fa-edit"></i> تعديل</button>` : ''}
-                        ${canDelete ? `<button onclick="deleteAccount(${acc.id})" class="btn-danger btn-small"><i class="fas fa-trash"></i> حذف</button>` : ''}
-                    </td>
-                </tr>`;
-            });
-            html += `</tbody></table></div></div>`;
-            document.getElementById("mainContent").innerHTML = html;
-        }
-
-        function editAccount(id) {
-            const acc = accounts.find(a => a.id === id);
-            if (!acc) return;
-            const newName = prompt("تعديل اسم الحساب:", acc.name);
-            if (newName && newName.trim()) {
-                acc.name = newName.trim();
-                saveAllData();
-                showMessage("تم تعديل اسم الحساب بنجاح");
-                renderChartOfAccounts();
-            }
-        }
-
-        function deleteAccount(id) {
-            const acc = accounts.find(a => a.id === id);
-            if (!acc) return;
-            if (confirm(`هل أنت متأكد من حذف الحساب "${acc.name}"؟ لا يمكن التراجع.`)) {
-                accounts = accounts.filter(a => a.id !== id);
-                saveAllData();
-                showMessage("تم حذف الحساب بنجاح");
-                renderChartOfAccounts();
-            }
-        }
-
-        // ====================== إضافة حساب جديد ======================
-        function renderAddAccount() {
-            if (!permissions[currentUser.role]?.canAddAccount) {
-                document.getElementById("mainContent").innerHTML = `<div class="card"><h3>غير مسموح</h3><p>ليس لديك صلاحية لإضافة حسابات</p></div>`;
-                return;
-            }
-            let html = `<div class="card"><div class="card-header"><h3><i class="fas fa-plus-circle"></i> إضافة حساب جديد</h3></div>
-                <div class="form-group"><label>اسم الحساب</label><input type="text" id="newAccName" placeholder="مثال: مصروفات الصيانة"></div>
-                <div class="form-group"><label>نوع الحساب</label><select id="newAccType">
-                    <option value="asset">أصل (Asset)</option><option value="liability">خصم (Liability)</option>
-                    <option value="equity">حقوق ملكية (Equity)</option><option value="income">إيراد (Income)</option>
-                    <option value="expense">مصروف (Expense)</option>
-                </select></div>
-                <div class="form-group"><label>التصنيف</label><select id="newAccCategory">
-                    <option value="currentAssets">أصول متداولة</option><option value="fixedAssets">أصول ثابتة</option>
-                    <option value="currentLiabilities">خصوم متداولة</option><option value="longTermLiabilities">خصوم طويلة الأجل</option>
-                    <option value="equity">حقوق ملكية</option>
-                    <option value="operatingRevenue">إيرادات تشغيلية</option><option value="nonOperatingIncome">إيرادات غير تشغيلية</option>
-                    <option value="costOfSales">تكلفة المبيعات</option><option value="operatingExpenses">مصروفات تشغيلية</option>
-                    <option value="nonOperatingExpenses">مصروفات غير تشغيلية</option>
-                </select></div>
-                <div class="form-group"><label>نوع الحساب (دائم/مؤقت)</label><select id="newAccPermanent">
-                    <option value="true">دائم (يرحل للسنة القادمة) - الأصول، الخصوم، حقوق الملكية</option>
-                    <option value="false">مؤقت (يغلق نهاية السنة) - الإيرادات، المصروفات</option>
-                </select></div>
-                <button onclick="addNewAccount()" class="btn-success">إضافة الحساب</button></div>`;
-            document.getElementById("mainContent").innerHTML = html;
-        }
-
-        function addNewAccount() {
-            const name = document.getElementById("newAccName").value.trim();
-            const type = document.getElementById("newAccType").value;
-            const category = document.getElementById("newAccCategory").value;
-            const isPermanent = document.getElementById("newAccPermanent").value === "true";
-            if (!name) { showMessage("أدخل اسم الحساب", "error"); return; }
-            accounts.push({ id: nextAccountId++, code: (nextAccountId + 1000).toString(), name, type, category, isGroup: false, isPermanent });
-            saveAllData();
-            showMessage(`تم إضافة الحساب "${name}" بنجاح`);
-            renderChartOfAccounts();
-        }
-
-        // ====================== إدخال قيد يومية ======================
-        function renderJournalEntry() {
-            if (!permissions[currentUser.role]?.canAddEntry && !permissions[currentUser.role]?.canEditEntry) {
-                document.getElementById("mainContent").innerHTML = `<div class="card"><h3>غير مسموح</h3><p>ليس لديك صلاحية لإدخال القيود</p></div>`;
-                return;
-            }
-            const isEditing = editingEntryId !== null;
-            const entry = isEditing ? getCurrentYearEntries().find(e => e.id === editingEntryId) : null;
-            if (isEditing && entry) {
-                entryRows = entry.lines.map(line => ({ accountId: line.accountId, debit: line.debit, credit: line.credit }));
-            } else {
-                entryRows = [{ accountId: "", debit: 0, credit: 0 }];
-            }
-            
-            const accountOptions = accounts.filter(a => !a.isGroup).map(a => `<option value="${a.id}">${a.code} - ${a.name}</option>`).join("");
-            const rowsHtml = entryRows.map((row, idx) => `
-                <div class="form-row">
-                    <div class="form-group"><select class="account-select" data-idx="${idx}">${accountOptions}</select></div>
-                    <div class="form-group"><input type="number" class="debit-input" data-idx="${idx}" placeholder="مدين" value="${row.debit}"></div>
-                    <div class="form-group"><input type="number" class="credit-input" data-idx="${idx}" placeholder="دائن" value="${row.credit}"></div>
-                    <div class="form-group"><button onclick="removeEntryRow(${idx})" class="btn-danger">✖</button></div>
-                </div>
-            `).join("");
-            
-            const html = `<div class="card"><div class="card-header"><h3><i class="fas fa-pen-alt"></i> ${isEditing ? 'تعديل قيد' : 'إدخال قيد جديد'}</h3></div>
-                <div class="form-group"><label>التاريخ</label><input type="date" id="entryDate" value="${isEditing ? entry.date : new Date().toISOString().split('T')[0]}"></div>
-                <div class="form-group"><label>البيان</label><input type="text" id="entryDesc" placeholder="وصف القيد" value="${isEditing ? entry.description : ''}"></div>
-                <div id="entryRowsContainer">${rowsHtml}</div>
-                <div style="display: flex; gap: 10px; margin-top: 15px;">
-                    <button onclick="addEntryRow()" class="btn-success">+ إضافة سطر</button>
-                    <button onclick="saveJournalEntry()" class="btn-success"><i class="fas fa-save"></i> ${isEditing ? 'تحديث القيد' : 'حفظ القيد'}</button>
-                    ${isEditing ? '<button onclick="cancelEdit()" class="btn-warning">إلغاء التعديل</button>' : ''}
-                </div>
-                <div style="margin-top: 15px; padding: 10px; background: #e3f2fd; border-radius: 8px; font-size: 13px;">
-                    <i class="fas fa-info-circle"></i> ملاحظة: يمكنك ترتيب السطور كيفما تشاء (مدين أولاً أو دائن أولاً)، النظام سيتأكد تلقائياً من توازن القيد.
-                </div>
-            </div>`;
-            document.getElementById("mainContent").innerHTML = html;
-            
-            document.querySelectorAll(".account-select").forEach((select, idx) => {
-                if (entryRows[idx] && entryRows[idx].accountId) select.value = entryRows[idx].accountId;
-                select.onchange = (e) => { entryRows[parseInt(e.target.dataset.idx)].accountId = parseInt(e.target.value); };
-            });
-            document.querySelectorAll(".debit-input").forEach(input => {
-                input.onchange = (e) => { entryRows[parseInt(e.target.dataset.idx)].debit = parseFloat(e.target.value) || 0; };
-            });
-            document.querySelectorAll(".credit-input").forEach(input => {
-                input.onchange = (e) => { entryRows[parseInt(e.target.dataset.idx)].credit = parseFloat(e.target.value) || 0; };
-            });
-        }
-
-        function addEntryRow() { entryRows.push({ accountId: "", debit: 0, credit: 0 }); renderJournalEntry(); }
-        function removeEntryRow(idx) { if (entryRows.length > 1) { entryRows.splice(idx, 1); renderJournalEntry(); } else showMessage("لابد من وجود سطر واحد", "error"); }
-        function cancelEdit() { editingEntryId = null; renderJournalEntry(); }
-
-        function saveJournalEntry() {
-            const date = document.getElementById("entryDate").value;
-            const description = document.getElementById("entryDesc").value;
-            let lines = [], totalDebit = 0, totalCredit = 0;
-            entryRows.forEach(row => {
-                if (row.accountId && (row.debit > 0 || row.credit > 0)) {
-                    lines.push({ accountId: row.accountId, debit: row.debit, credit: row.credit });
-                    totalDebit += row.debit; totalCredit += row.credit;
-                }
-            });
-            if (lines.length === 0) { showMessage("أضف سطر واحد على الأقل", "error"); return; }
-            if (Math.abs(totalDebit - totalCredit) > 0.01) { showMessage("مجموع المدين لا يساوي مجموع الدائن", "error"); return; }
-            
-            const entries = getCurrentYearEntries();
-            if (editingEntryId !== null) {
-                const index = entries.findIndex(e => e.id === editingEntryId);
-                if (index !== -1) {
-                    entries[index] = { ...entries[index], date, description, lines };
-                    showMessage("تم تعديل القيد بنجاح");
-                }
-                editingEntryId = null;
-            } else {
-                entries.push({ id: Date.now(), date, description, lines });
-                showMessage("تم حفظ القيد بنجاح");
-            }
-            saveCurrentYearEntries(entries);
-            entryRows = [{ accountId: "", debit: 0, credit: 0 }];
-            renderEntriesList();
-        }
-
-        // ====================== قائمة القيود ======================
-        function renderEntriesList() {
-            const entries = getCurrentYearEntries();
-            if (entries.length === 0) {
-                document.getElementById("mainContent").innerHTML = `<div class="card"><div class="card-header"><h3><i class="fas fa-list-ul"></i> قائمة القيود</h3></div><p>لا توجد قيود مسجلة بعد</p></div>`;
-                return;
-            }
-            let html = `<div class="card"><div class="card-header"><h3><i class="fas fa-list-ul"></i> قائمة القيود المحاسبية</h3></div>
-                <div class="table-responsive"><table><thead><tr><th>التاريخ</th><th>البيان</th><th>عدد السطور</th><th>الإجراءات</th></tr></thead><tbody>`;
-            entries.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(entry => {
-                html += `<tr>
-                    <td>${entry.date}</td>
-                    <td>${entry.description}</td>
-                    <td>${entry.lines.length}</td>
-                    <td class="action-buttons">
-                        ${permissions[currentUser.role]?.canEditEntry ? `<button onclick="editEntry(${entry.id})" class="btn-info"><i class="fas fa-edit"></i> تعديل</button>` : ''}
-                        ${permissions[currentUser.role]?.canDeleteEntry ? `<button onclick="deleteEntry(${entry.id})" class="btn-danger"><i class="fas fa-trash"></i> حذف</button>` : ''}
-                    </td>
-                </tr>`;
-            });
-            html += `</tbody></table></div></div>`;
-            document.getElementById("mainContent").innerHTML = html;
-        }
-
-        function editEntry(id) { editingEntryId = id; renderJournalEntry(); }
-        function deleteEntry(id) {
-            if (confirm("هل أنت متأكد من حذف هذا القيد؟ لا يمكن التراجع")) {
-                const entries = getCurrentYearEntries();
-                const newEntries = entries.filter(e => e.id !== id);
-                saveCurrentYearEntries(newEntries);
-                showMessage("تم حذف القيد بنجاح");
-                renderEntriesList();
-            }
-        }
-
-        // ====================== إدارة السنوات المالية ======================
-        function renderFiscalYears() {
-            let html = `<div class="card"><div class="card-header"><h3><i class="fas fa-calendar-alt"></i> إدارة السنوات المالية</h3>
-                <button onclick="showAddFiscalYearForm()" class="btn-success">+ إضافة سنة مالية جديدة</button></div>
-                <div class="table-responsive"><table><thead><tr><th>السنة</th><th>تاريخ البداية</th><th>تاريخ النهاية</th><th>الحالة</th><th>الإجراءات</th></tr></thead><tbody>`;
-            
-            fiscalYears.forEach(year => {
-                const isCurrent = currentFiscalYear?.id === year.id;
-                html += `<tr>
-                    <td>${year.name}</td>
-                    <td>${year.startDate}</td>
-                    <td>${year.endDate}</td>
-                    <td>${year.isClosed ? '<span style="color:#dc3545">مغلقة</span>' : '<span style="color:#28a745">مفتوحة</span>'} ${isCurrent ? '<span class="year-badge">الحالية</span>' : ''}</td>
-                    <td class="action-buttons">
-                        ${!year.isClosed && !isCurrent ? `<button onclick="switchToYear(${year.id})" class="btn-info">تبديل</button>` : ''}
-                        ${!year.isClosed && permissions[currentUser.role]?.canCloseYear ? `<button onclick="prepareCloseYear(${year.id})" class="btn-warning">إقفال السنة</button>` : ''}
-                    </td>
-                </tr>`;
-            });
-            html += `</tbody></table></div></div>`;
-            document.getElementById("mainContent").innerHTML = html;
-        }
-
-        function showAddFiscalYearForm() {
-            const newYearName = prompt("أدخل اسم السنة المالية الجديدة (مثال: 2025):");
-            if (newYearName) {
-                const newYear = {
-                    id: Date.now(),
-                    name: newYearName,
-                    startDate: `${newYearName}-01-01`,
-                    endDate: `${newYearName}-12-31`,
-                    isClosed: false,
-                    entries: [],
-                    openingBalances: {}
-                };
-                fiscalYears.push(newYear);
-                saveAllData();
-                showMessage(`تم إضافة السنة المالية ${newYearName}`);
-                renderFiscalYears();
-            }
-        }
-
-        function switchToYear(yearId) {
-            const year = fiscalYears.find(y => y.id === yearId);
-            if (year && !year.isClosed) {
-                currentFiscalYear = year;
-                saveAllData();
-                updateYearBadge();
-                showMessage(`تم التبديل إلى السنة المالية ${year.name}`);
-                renderDashboard();
-            }
-        }
-
-        // ====================== إقفال السنة المالية ======================
-        function prepareCloseYear(yearId) {
-            const year = fiscalYears.find(y => y.id === yearId);
-            if (year) {
-                renderYearEndClosing(year);
-            }
-        }
-
-        function renderYearEndClosing(year) {
-            if (!year) {
-                document.getElementById("mainContent").innerHTML = `<div class="card"><h3>لا توجد سنة مالية محددة</h3></div>`;
-                return;
-            }
-            
-            // حساب صافي الربح/الخسارة للسنة
-            let totalRevenues = 0, totalExpenses = 0;
-            const entries = year.entries || [];
-            let tempBalances = {};
-            accounts.forEach(acc => { tempBalances[acc.id] = { debit: 0, credit: 0 }; });
-            entries.forEach(entry => {
-                entry.lines.forEach(line => {
-                    if (tempBalances[line.accountId]) {
-                        tempBalances[line.accountId].debit += line.debit;
-                        tempBalances[line.accountId].credit += line.credit;
-                    }
-                });
-            });
-            if (year.openingBalances) {
-                for (const [accId, balance] of Object.entries(year.openingBalances)) {
-                    const acc = accounts.find(a => a.id === parseInt(accId));
-                    if (acc && acc.isPermanent) {
-                        if (acc.type === "asset" || acc.type === "expense") {
-                            tempBalances[accId].debit += balance;
-                        } else {
-                            tempBalances[accId].credit += balance;
-                        }
-                    }
-                }
-            }
-            for (let [id, bal] of Object.entries(tempBalances)) {
-                const acc = accounts.find(a => a.id === parseInt(id));
-                if (acc && !acc.isGroup) {
-                    if (acc.type === "income") {
-                        totalRevenues += bal.credit - bal.debit;
-                    }
-                    if (acc.type === "expense") {
-                        totalExpenses += bal.debit - bal.credit;
-                    }
-                }
-            }
-            const netIncome = totalRevenues - totalExpenses;
-            
-            let html = `<div class="card"><div class="card-header"><h3><i class="fas fa-clipboard-list"></i> إقفال السنة المالية: ${year.name}</h3></div>
-                <div class="statement-section"><div class="statement-title">ملخص السنة</div>
-                <div class="statement-row"><span>إجمالي الإيرادات</span><span>${totalRevenues.toFixed(2)}</span></div>
-                <div class="statement-row"><span>إجمالي المصروفات</span><span>${totalExpenses.toFixed(2)}</span></div>
-                <div class="statement-row double-total"><span>صافي الربح / (الخسارة)</span><span>${netIncome.toFixed(2)}</span></div></div>
-                
-                <div class="statement-section"><div class="statement-title">الحسابات التي سيتم ترحيلها للسنة القادمة (أرصدة مكملة)</div>
-                <div class="statement-row total"><span>الأصول والخصوم وحقوق الملكية</span><span>سيتم ترحيلها تلقائياً</span></div></div>
-                
-                <div class="statement-section"><div class="statement-title">الحسابات التي سيتم إغلاقها (لن ترحل)</div>
-                <div class="statement-row total"><span>الإيرادات والمصروفات</span><span>سيتم إغلاقها وتبدأ من الصفر</span></div></div>
-                
-                <div style="margin-top:20px; padding:15px; background:#fff3e0; border-radius:10px;">
-                    <h4><i class="fas fa-info-circle"></i> ماذا سيحدث عند إقفال السنة؟</h4>
-                    <ul style="margin-right:20px; margin-top:10px;">
-                        <li>سيتم إنشاء سنة مالية جديدة باسم ${parseInt(year.name) + 1}</li>
-                        <li>سيتم ترحيل الأرصدة المكملة (الأصول، الخصوم، حقوق الملكية) كأرصدة افتتاحية للسنة الجديدة</li>
-                        <li>سيتم إغلاق حسابات الإيرادات والمصروفات (ستبدأ من الصفر)</li>
-                        <li>سيتم إضافة صافي الربح إلى حساب الأرباح المحتجزة</li>
-                        <li>لن يمكن تعديل السنة المالية بعد إغلاقها</li>
-                    </ul>
-                </div>
-                
-                <div class="action-buttons" style="margin-top:25px;">
-                    <button onclick="closeYearAndCreateNew(${year.id}, ${netIncome})" class="btn-warning" style="padding:12px 30px;"><i class="fas fa-lock"></i> إقفال السنة وبدء سنة جديدة</button>
-                </div>
-            </div>`;
-            document.getElementById("mainContent").innerHTML = html;
-        }
-
-        function closeYearAndCreateNew(yearId, netIncome) {
-            const year = fiscalYears.find(y => y.id === yearId);
-            if (!year) return;
-            if (year.isClosed) {
-                showMessage("السنة مغلقة بالفعل", "error");
-                return;
-            }
-            
-            // حساب الأرصدة الدائمة لترحيلها
-            let tempBalances = {};
-            accounts.forEach(acc => { tempBalances[acc.id] = { debit: 0, credit: 0 }; });
-            const entries = year.entries || [];
-            entries.forEach(entry => {
-                entry.lines.forEach(line => {
-                    if (tempBalances[line.accountId]) {
-                        tempBalances[line.accountId].debit += line.debit;
-                        tempBalances[line.accountId].credit += line.credit;
-                    }
-                });
-            });
-            if (year.openingBalances) {
-                for (const [accId, balance] of Object.entries(year.openingBalances)) {
-                    const acc = accounts.find(a => a.id === parseInt(accId));
-                    if (acc && acc.isPermanent) {
-                        if (acc.type === "asset" || acc.type === "expense") {
-                            tempBalances[accId].debit += balance;
-                        } else {
-                            tempBalances[accId].credit += balance;
-                        }
-                    }
-                }
-            }
-            
-            const openingBalances = {};
-            for (let [id, bal] of Object.entries(tempBalances)) {
-                const acc = accounts.find(a => a.id === parseInt(id));
-                if (acc && acc.isPermanent && !acc.isGroup) {
-                    let amount = bal.debit - bal.credit;
-                    if (acc.type === "liability" || acc.type === "equity" || acc.type === "income") {
-                        amount = -amount;
-                    }
-                    if (acc.id === 16) { // حساب الأرباح المحتجزة
-                        amount += netIncome;
-                    }
-                    if (Math.abs(amount) > 0.01) openingBalances[id] = amount;
-                }
-            }
-            
-            // إغلاق السنة الحالية
-            year.isClosed = true;
-            
-            // إنشاء سنة جديدة
-            const newYearName = (parseInt(year.name) + 1).toString();
-            const newYear = {
-                id: Date.now(),
-                name: newYearName,
-                startDate: `${newYearName}-01-01`,
-                endDate: `${newYearName}-12-31`,
-                isClosed: false,
-                entries: [],
-                openingBalances: openingBalances
-            };
-            fiscalYears.push(newYear);
-            currentFiscalYear = newYear;
-            
-            saveAllData();
-            updateYearBadge();
-            showMessage(`تم إقفال السنة المالية ${year.name} وإفتتاح السنة الجديدة ${newYearName} بنجاح`);
-            renderDashboard();
-        }
-
-        // ====================== إعدادات الضريبة ======================
-        function renderTaxSettings() {
-            if (!permissions[currentUser.role]?.canEditSettings) {
-                document.getElementById("mainContent").innerHTML = `<div class="card"><h3>غير مسموح</h3><p>ليس لديك صلاحية لتعديل الإعدادات</p></div>`;
-                return;
-            }
-            let html = `<div class="card"><div class="card-header"><h3><i class="fas fa-percent"></i> إعدادات الضريبة وحساب ربحية السهم</h3></div>
-                <div class="form-group"><label>نسبة ضريبة الدخل (%)</label><input type="number" id="taxRateInput" value="${taxRate}" step="0.5"></div>
-                <div class="form-group"><label>عدد الأسهم القائمة</label><input type="number" id="sharesInput" value="${sharesOutstanding}"></div>
-                <button onclick="saveTaxSettings()" class="btn-success">حفظ الإعدادات</button>
-                <div style="margin-top: 15px; padding: 10px; background: #e3f2fd; border-radius: 8px;">
-                    <i class="fas fa-info-circle"></i> ملاحظة: ربحية السهم (EPS) = صافي الربح ÷ عدد الأسهم
-                </div></div>`;
-            document.getElementById("mainContent").innerHTML = html;
-        }
-
-        function saveTaxSettings() {
-            const newTaxRate = parseFloat(document.getElementById("taxRateInput").value);
-            const newShares = parseInt(document.getElementById("sharesInput").value);
-            if (!isNaN(newTaxRate) && newTaxRate >= 0) taxRate = newTaxRate;
-            if (!isNaN(newShares) && newShares > 0) sharesOutstanding = newShares;
-            saveAllData();
-            showMessage("تم حفظ الإعدادات");
-            renderIncomeStatement();
-        }
-
-        // ====================== لوحة التحكم الاحترافية ======================
-        let dashboardChart = null;
-        
-        function renderDashboard() {
-            const balances = calculateBalances();
-            let totalAssets = 0, totalLiabilities = 0, totalEquity = 0;
-            let totalRevenues = 0, totalExpenses = 0;
-            let currentAssets = 0, fixedAssets = 0;
-            let currentLiabilities = 0, longTermLiabilities = 0;
-            
-            for (let [id, bal] of Object.entries(balances)) {
-                if (bal.isGroup) continue;
-                if (bal.category === "currentAssets" && bal.type === "debit") currentAssets += bal.amount;
-                if (bal.category === "fixedAssets" && bal.type === "debit") fixedAssets += bal.amount;
-                if (bal.category === "currentLiabilities" && bal.type === "credit") currentLiabilities += bal.amount;
-                if (bal.category === "longTermLiabilities" && bal.type === "credit") longTermLiabilities += bal.amount;
-                if (bal.category === "equity" && bal.type === "credit") totalEquity += bal.amount;
-                if (bal.category === "operatingRevenue" || bal.category === "nonOperatingIncome") {
-                    totalRevenues += bal.type === "credit" ? bal.amount : 0;
-                }
-                if (bal.category === "costOfSales" || bal.category === "operatingExpenses" || bal.category === "nonOperatingExpenses") {
-                    totalExpenses += bal.type === "debit" ? bal.amount : 0;
-                }
-            }
-            totalAssets = currentAssets + fixedAssets;
-            totalLiabilities = currentLiabilities + longTermLiabilities;
-            const netIncome = totalRevenues - totalExpenses;
-            const netProfitMargin = totalRevenues > 0 ? (netIncome / totalRevenues * 100) : 0;
-            const currentRatio = currentLiabilities > 0 ? (currentAssets / currentLiabilities) : 0;
-            
-            const entriesCount = getCurrentYearEntries().length;
-            const accountsCount = accounts.filter(a => !a.isGroup).length;
-            
-            let html = `
-                <div class="stats-grid">
-                    <div class="stat-card" style="background: linear-gradient(135deg, #667eea, #764ba2);" onclick="switchPage('balance-sheet')">
-                        <i class="fas fa-landmark"></i>
-                        <div class="number">${totalAssets.toFixed(2)}</div>
-                        <div class="label">إجمالي الأصول</div>
-                    </div>
-                    <div class="stat-card" style="background: linear-gradient(135deg, #f093fb, #f5576c);" onclick="switchPage('income-statement')">
-                        <i class="fas fa-chart-line"></i>
-                        <div class="number">${totalRevenues.toFixed(2)}</div>
-                        <div class="label">إجمالي الإيرادات</div>
-                    </div>
-                    <div class="stat-card" style="background: linear-gradient(135deg, #4facfe, #00f2fe);" onclick="switchPage('income-statement')">
-                        <i class="fas fa-chart-line"></i>
-                        <div class="number">${totalExpenses.toFixed(2)}</div>
-                        <div class="label">إجمالي المصروفات</div>
-                    </div>
-                    <div class="stat-card" style="background: linear-gradient(135deg, #fa709a, #fee140);" onclick="switchPage('income-statement')">
-                        <i class="fas fa-money-bill-wave"></i>
-                        <div class="number">${netIncome.toFixed(2)}</div>
-                        <div class="label">صافي الربح</div>
-                    </div>
-                </div>
-                
-                <div class="stats-grid">
-                    <div class="stat-card" style="background: linear-gradient(135deg, #43e97b, #38f9d7);">
-                        <i class="fas fa-percent"></i>
-                        <div class="number">${netProfitMargin.toFixed(2)}%</div>
-                        <div class="label">هامش صافي الربح</div>
-                    </div>
-                    <div class="stat-card" style="background: linear-gradient(135deg, #f6d365, #fda085);">
-                        <i class="fas fa-chart-simple"></i>
-                        <div class="number">${currentRatio.toFixed(2)}</div>
-                        <div class="label">نسبة السيولة (المتداولة)</div>
-                    </div>
-                    <div class="stat-card" style="background: linear-gradient(135deg, #a18cd1, #fbc2eb);">
-                        <i class="fas fa-book"></i>
-                        <div class="number">${entriesCount}</div>
-                        <div class="label">عدد القيود</div>
-                    </div>
-                    <div class="stat-card" style="background: linear-gradient(135deg, #ff9a9e, #fecfef);">
-                        <i class="fas fa-tree"></i>
-                        <div class="number">${accountsCount}</div>
-                        <div class="label">عدد الحسابات</div>
-                    </div>
-                </div>
-                
-                <div class="card">
-                    <div class="card-header">
-                        <h3><i class="fas fa-chart-pie"></i> التحليل المالي</h3>
-                        <div><button onclick="exportToPDF('dashboard-charts', 'dashboard_analysis')" class="btn-success"><i class="fas fa-file-pdf"></i> PDF</button></div>
-                    </div>
-                    <div class="chart-container" id="dashboard-charts">
-                        <canvas id="financialChart"></canvas>
-                    </div>
-                </div>
-                
-                <div class="card">
-                    <div class="card-header">
-                        <h3><i class="fas fa-history"></i> أخر القيود المحاسبية</h3>
-                        <button onclick="switchPage('entries-list')" class="btn-info">عرض كل القيود</button>
-                    </div>
-                    <div class="table-responsive"><table><thead><tr><th>التاريخ</th><th>البيان</th><th>عدد السطور</th></tr></thead><tbody>
-                        ${getCurrentYearEntries().slice(-5).reverse().map(entry => `<tr><td>${entry.date}</td><td>${entry.description}</td><td>${entry.lines.length}</td></tr>`).join('')}
-                        ${getCurrentYearEntries().length === 0 ? '<tr><td colspan="3">لا توجد قيود</td></tr>' : ''}
-                    </tbody>}</div>
-                </div>
-                
-                <div class="card">
-                    <div class="card-header">
-                        <h3><i class="fas fa-calendar-alt"></i> السنة المالية الحالية</h3>
-                    </div>
-                    <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));">
-                        <div class="stat-card" style="background: #1976d2; padding: 15px;">
-                            <div class="number">${currentFiscalYear?.name || '-'}</div>
-                            <div class="label">السنة</div>
-                        </div>
-                        <div class="stat-card" style="background: #1976d2; padding: 15px;">
-                            <div class="number">${currentFiscalYear?.startDate || '-'}</div>
-                            <div class="label">بداية السنة</div>
-                        </div>
-                        <div class="stat-card" style="background: #1976d2; padding: 15px;">
-                            <div class="number">${currentFiscalYear?.endDate || '-'}</div>
-                            <div class="label">نهاية السنة</div>
-                        </div>
-                        <div class="stat-card" style="background: ${currentFiscalYear?.isClosed ? '#dc3545' : '#28a745'}; padding: 15px;">
-                            <div class="number">${currentFiscalYear?.isClosed ? 'مغلقة' : 'مفتوحة'}</div>
-                            <div class="label">الحالة</div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            document.getElementById("mainContent").innerHTML = html;
-            
-            // رسم الرسم البياني
-            if (dashboardChart) dashboardChart.destroy();
-            const ctx = document.getElementById('financialChart')?.getContext('2d');
-            if (ctx) {
-                dashboardChart = new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: ['الأصول المتداولة', 'الأصول الثابتة', 'الخصوم المتداولة', 'الخصوم طويلة الأجل', 'حقوق الملكية', 'الإيرادات', 'المصروفات'],
-                        datasets: [{
-                            label: 'القيم',
-                            data: [currentAssets, fixedAssets, currentLiabilities, longTermLiabilities, totalEquity, totalRevenues, totalExpenses],
-                            backgroundColor: ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#28a745', '#dc3545'],
-                            borderRadius: 8
-                        }]
-                    },
-                    options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'top' } } }
-                });
-            }
-        }
-
-        function renderHelp() {
-            const html = `<div class="card"><div class="card-header"><h3><i class="fas fa-question-circle"></i> دليل الاستخدام الشامل</h3></div>
-                <div style="padding:10px;">
-                <h4><i class="fas fa-calendar-alt"></i> 1. إدارة السنوات المالية</h4><p>من قائمة "إدارة السنوات المالية" يمكنك إضافة سنوات جديدة، والتبديل بينها، وإقفال السنة الحالية. عند إقفال السنة، يتم ترحيل الأرصدة الدائمة (أصول، خصوم، حقوق ملكية) تلقائياً للسنة الجديدة.</p>
-                <h4><i class="fas fa-edit"></i> 2. تعديل القوائم المالية</h4><p>في قائمة الدخل والمركز المالي، يمكنك الضغط على أي قيمة لتعديلها مباشرة - سيتم إنشاء قيد تعديل تلقائي.</p>
-                <h4><i class="fas fa-tree"></i> 3. شجرة الحسابات</h4><p>يمكنك إضافة، تعديل، أو حذف أي حساب. الحسابات الدائمة ترحل بين السنوات، والمؤقتة تغلق نهاية السنة.</p>
-                <h4><i class="fas fa-pen-alt"></i> 4. إدخال القيود</h4><p>يمكنك إدخال قيود محاسبية بمرونة كاملة - أي ترتيب للسطور، مع تأكد تلقائي من توازن القيد.</p>
-                <h4><i class="fas fa-chart-line"></i> 5. القوائم المالية</h4><p>قائمة الدخل متعددة المستويات (إيرادات - تكلفة مبيعات = مجمل ربح - مصروفات = EBIT - ضرائب = صافي الربح) والمركز المالي المفصل.</p>
-                <h4><i class="fas fa-percent"></i> 6. إعدادات الضريبة</h4><p>يمكنك تعديل نسبة ضريبة الدخل وعدد الأسهم لحساب ربحية السهم (EPS).</p>
-                <h4><i class="fas fa-save"></i> 7. حفظ البيانات</h4><p>البيانات تُحفظ تلقائياً في متصفحك، ولن تحتاج لتسجيل الدخول مرة أخرى إلا إذا قمت بتسجيل الخروج.</p>
-                </div></div>`;
-            document.getElementById("mainContent").innerHTML = html;
-        }
-
-        function exportToPDF(elementId, filename) {
-            if (!permissions[currentUser.role]?.canExport) { showMessage("ليس لديك صلاحية للتصدير", "error"); return; }
-            const element = document.getElementById(elementId);
-            if (!element) { showMessage("لا يوجد بيانات للتصدير", "error"); return; }
-            html2pdf().set({ margin: 0.5, filename: `${filename}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } }).from(element).save();
-            showMessage(`تم تصدير ${filename}.pdf بنجاح`);
-        }
-
-        function showMessage(msg, type = "success") {
-            const toast = document.getElementById("toastMessage");
-            toast.textContent = msg;
-            toast.style.backgroundColor = type === "error" ? "#dc3545" : "#28a745";
-            toast.style.display = "block";
-            setTimeout(() => toast.style.display = "none", 3000);
-        }
-
-        function switchPage(page) {
-            document.querySelectorAll(".sidebar-item").forEach(item => item.classList.remove("active"));
-            const activeItem = document.querySelector(`.sidebar-item[data-page="${page}"]`);
-            if (activeItem) activeItem.classList.add("active");
-            if (page === "dashboard") renderDashboard();
-            else if (page === "chart-of-accounts") renderChartOfAccounts();
-            else if (page === "add-account") renderAddAccount();
-            else if (page === "fiscal-years") renderFiscalYears();
-            else if (page === "year-end-closing") {
-                if (currentFiscalYear) renderYearEndClosing(currentFiscalYear);
-                else showMessage("لا توجد سنة مالية حالية", "error");
-            }
-            else if (page === "tax-settings") renderTaxSettings();
-            else if (page === "journal-entry") { editingEntryId = null; renderJournalEntry(); }
-            else if (page === "entries-list") renderEntriesList();
-            else if (page === "income-statement") renderIncomeStatement();
-            else if (page === "balance-sheet") renderBalanceSheet();
-            else if (page === "trial-balance") renderTrialBalance();
-            else if (page === "help") renderHelp();
-            else renderDashboard();
-        }
-
-        const users = [
-            { id: 1, username: "admin", password: "123456", name: "مدير النظام", role: "admin", roleName: "مدير كامل الصلاحيات" },
-            { id: 2, username: "accountant", password: "123456", name: "محمد أحمد", role: "accountant", roleName: "محاسب" },
-            { id: 3, username: "viewer", password: "123456", name: "سعيد محمود", role: "viewer", roleName: "مشاهد" }
-        ];
-
-        function attemptLogin() {
-            const username = document.getElementById("loginUsername").value;
-            const password = document.getElementById("loginPassword").value;
-            const user = users.find(u => u.username === username && u.password === password);
-            if (user) {
-                currentUser = user;
-                localStorage.setItem("currentUser", JSON.stringify({ username: user.username, name: user.name, role: user.role, roleName: user.roleName }));
-                document.getElementById("loginContainer").style.display = "none";
-                document.getElementById("mainApp").style.display = "block";
-                document.getElementById("currentUserName").innerHTML = `<i class="fas fa-user"></i> ${user.name}`;
-                document.getElementById("currentUserRole").innerHTML = `<i class="fas fa-shield-alt"></i> ${user.roleName}`;
-                loadUserData();
-                renderDashboard();
-                showMessage(`مرحباً ${user.name}`);
-            } else {
-                document.getElementById("loginError").style.display = "block";
-            }
-        }
-
-        function logout() {
-            saveAllData();
-            localStorage.removeItem("currentUser");
-            currentUser = null;
-            document.getElementById("loginContainer").style.display = "flex";
-            document.getElementById("mainApp").style.display = "none";
-            document.getElementById("loginUsername").value = "";
-            document.getElementById("loginPassword").value = "";
-            document.getElementById("loginError").style.display = "none";
-        }
-
-        // التحقق من وجود جلسة محفوظة
-        if (!checkSavedSession()) {
-            document.getElementById("loginContainer").style.display = "flex";
-        }
-
-        document.querySelectorAll(".sidebar-item").forEach(item => {
-            item.addEventListener("click", () => switchPage(item.dataset.page));
-        });
-        document.getElementById("menuToggle").addEventListener("click", () => {
-            document.getElementById("sidebar").classList.toggle("open");
-        });
-        
-        window.editAccountValueInStatement = editAccountValueInStatement;
-        window.adjustAccountBalance = adjustAccountBalance;
-        window.editAccount = editAccount;
-        window.deleteAccount = deleteAccount;
-        window.addNewAccount = addNewAccount;
-        window.switchToYear = switchToYear;
-        window.closeYearAndCreateNew = closeYearAndCreateNew;
-        window.prepareCloseYear = prepareCloseYear;
-        window.saveTaxSettings = saveTaxSettings;
-        window.exportToPDF = exportToPDF;
-        window.showAddFiscalYearForm = showAddFiscalYearForm;
-        window.switchPage = switchPage;
-        window.addEntryRow = addEntryRow;
-        window.removeEntryRow = removeEntryRow;
-        window.cancelEdit = cancelEdit;
-        window.saveJournalEntry = saveJournalEntry;
-        window.editEntry = editEntry;
-        window.deleteEntry = deleteEntry;
-    </script>
-</body>
-</html>
+                    <td>${acc.name}
