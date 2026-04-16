@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام محاسبي متكامل - مع حفظ تلقائي</title>
+    <title>نظام محاسبي متكامل - إدارة الشركات</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -11,6 +11,52 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Tajawal', sans-serif; background: #f0f2f5; direction: rtl; }
+        
+        /* شاشة تسجيل الدخول */
+        .login-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0d47a1, #1976d2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        .login-card {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+        .login-card h2 { color: #0d47a1; margin-bottom: 20px; }
+        .login-card input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-family: 'Tajawal', sans-serif;
+        }
+        .login-card button {
+            width: 100%;
+            padding: 12px;
+            background: #1976d2;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .error-msg { color: #dc3545; margin-top: 10px; display: none; }
+        
+        /* الواجهة الرئيسية */
         .top-navbar {
             background: linear-gradient(135deg, #0d47a1, #1976d2);
             color: white;
@@ -24,6 +70,10 @@
             z-index: 1000;
         }
         .logo { font-size: 24px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+        .user-info { display: flex; align-items: center; gap: 15px; }
+        .user-info span { background: rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 20px; }
+        .logout-btn { background: #dc3545; border: none; padding: 5px 15px; border-radius: 20px; color: white; cursor: pointer; }
+        
         .sidebar {
             position: fixed;
             right: 0;
@@ -47,6 +97,11 @@
             background: #e3f2fd;
             border-right-color: #1976d2;
             color: #1976d2;
+        }
+        .sidebar-item.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: #f5f5f5;
         }
         .main-content { margin-right: 280px; padding: 25px; min-height: 100vh; }
         .card {
@@ -108,8 +163,15 @@
             z-index: 1100;
             display: none;
         }
-        .tree-node { margin-right: 25px; margin-top: 5px; }
-        .tree-item { padding: 8px; margin: 3px 0; background: #f8f9fa; border-radius: 8px; cursor: pointer; }
+        .guide {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+        .guide h4 { color: #0d47a1; margin-bottom: 10px; }
+        .guide ol { margin-right: 20px; }
+        .guide li { margin: 10px 0; }
         @media (max-width: 768px) {
             .sidebar { transform: translateX(100%); }
             .sidebar.open { transform: translateX(0); }
@@ -120,25 +182,68 @@
     </style>
 </head>
 <body>
-    <div class="top-navbar">
-        <div class="logo"><i class="fas fa-chart-line"></i><span>نظام محاسبي متكامل</span></div>
-        <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+    <!-- شاشة تسجيل الدخول -->
+    <div class="login-container" id="loginContainer">
+        <div class="login-card">
+            <h2><i class="fas fa-chart-line"></i> نظام محاسبي متكامل</h2>
+            <input type="text" id="loginUsername" placeholder="اسم المستخدم">
+            <input type="password" id="loginPassword" placeholder="كلمة المرور">
+            <button onclick="attemptLogin()">تسجيل الدخول</button>
+            <div class="error-msg" id="loginError">بيانات الدخول غير صحيحة</div>
+            <div style="margin-top: 15px; font-size: 12px; color: #666;">
+                <strong>حسابات تجريبية:</strong><br>
+                مدير: admin / 123456<br>
+                محاسب: accountant / 123456<br>
+                مشاهد: viewer / 123456
+            </div>
+        </div>
     </div>
 
-    <div class="sidebar" id="sidebar">
-        <div class="sidebar-item active" data-page="dashboard"><i class="fas fa-tachometer-alt"></i><span>لوحة التحكم</span></div>
-        <div class="sidebar-item" data-page="chart-of-accounts"><i class="fas fa-tree"></i><span>شجرة الحسابات</span></div>
-        <div class="sidebar-item" data-page="journal-entry"><i class="fas fa-book"></i><span>إدخال قيد</span></div>
-        <div class="sidebar-item" data-page="trial-balance"><i class="fas fa-balance-scale"></i><span>ميزان المراجعة</span></div>
-        <div class="sidebar-item" data-page="income-statement"><i class="fas fa-chart-line"></i><span>قائمة الدخل</span></div>
-        <div class="sidebar-item" data-page="balance-sheet"><i class="fas fa-landmark"></i><span>المركز المالي</span></div>
-        <div class="sidebar-item" data-page="reports"><i class="fas fa-file-alt"></i><span>تقارير متقدمة</span></div>
-    </div>
+    <!-- الواجهة الرئيسية -->
+    <div id="mainApp" style="display: none;">
+        <div class="top-navbar">
+            <div class="logo"><i class="fas fa-chart-line"></i><span>نظام محاسبي متكامل</span></div>
+            <div class="user-info">
+                <span id="currentUserRole"></span>
+                <span id="currentUserName"></span>
+                <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> خروج</button>
+            </div>
+            <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+        </div>
 
-    <div class="main-content" id="mainContent"></div>
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-item" data-page="dashboard"><i class="fas fa-tachometer-alt"></i><span>لوحة التحكم</span></div>
+            <div class="sidebar-item" data-page="chart-of-accounts"><i class="fas fa-tree"></i><span>شجرة الحسابات</span></div>
+            <div class="sidebar-item" data-page="journal-entry"><i class="fas fa-book"></i><span>إدخال قيد</span></div>
+            <div class="sidebar-item" data-page="trial-balance"><i class="fas fa-balance-scale"></i><span>ميزان المراجعة</span></div>
+            <div class="sidebar-item" data-page="income-statement"><i class="fas fa-chart-line"></i><span>قائمة الدخل</span></div>
+            <div class="sidebar-item" data-page="balance-sheet"><i class="fas fa-landmark"></i><span>المركز المالي</span></div>
+            <div class="sidebar-item" data-page="reports"><i class="fas fa-file-alt"></i><span>تقارير متقدمة</span></div>
+            <div class="sidebar-item" data-page="users" id="usersMenuItem"><i class="fas fa-users-cog"></i><span>إدارة المستخدمين</span></div>
+            <div class="sidebar-item" data-page="help"><i class="fas fa-question-circle"></i><span>دليل الاستخدام</span></div>
+        </div>
+
+        <div class="main-content" id="mainContent"></div>
+    </div>
     <div class="toast-message" id="toastMessage"></div>
 
     <script>
+        // ====================== بيانات المستخدمين والصلاحيات ======================
+        let users = [
+            { id: 1, username: "admin", password: "123456", name: "مدير النظام", role: "admin", roleName: "مدير" },
+            { id: 2, username: "accountant", password: "123456", name: "محمد أحمد", role: "accountant", roleName: "محاسب" },
+            { id: 3, username: "viewer", password: "123456", name: "سعيد محمود", role: "viewer", roleName: "مشاهد" }
+        ];
+        
+        let currentUser = null;
+        
+        // صلاحيات المستخدمين
+        const permissions = {
+            admin: { canAddEntry: true, canAddAccount: true, canManageUsers: true, canExport: true, canViewAll: true },
+            accountant: { canAddEntry: true, canAddAccount: false, canManageUsers: false, canExport: true, canViewAll: true },
+            viewer: { canAddEntry: false, canAddAccount: false, canManageUsers: false, canExport: false, canViewAll: true }
+        };
+
         // ====================== شجرة الحسابات ======================
         const accounts = [
             { id: 1, code: "1000", name: "الأصول", type: "asset", parent: null, isGroup: true },
@@ -156,28 +261,29 @@
             { id: 13, code: "5200", name: "مصروفات إيجار", type: "expense", parent: 11, isGroup: false }
         ];
 
-        // تحميل البيانات المحفوظة
-        let journalEntries = loadData("journalEntries") || [];
-        let customers = loadData("customers") || [
-            { id: 1, name: "شركة النيل", phone: "01234567890", balance: 0 }
-        ];
-        let suppliers = loadData("suppliers") || [
-            { id: 1, name: "مورد المواد", phone: "01567890123", balance: 0 }
-        ];
-        let inventory = loadData("inventory") || [
-            { id: 1, name: "منتج أ", quantity: 100, price: 50, totalValue: 5000 }
-        ];
+        // تحميل البيانات المحفوظة (كل مستخدم له بياناته المستقلة)
+        function loadUserData() {
+            if (!currentUser) return;
+            const prefix = `user_${currentUser.username}_`;
+            window.journalEntries = JSON.parse(localStorage.getItem(prefix + "journalEntries")) || [];
+            window.customers = JSON.parse(localStorage.getItem(prefix + "customers")) || [
+                { id: 1, name: "شركة النيل", phone: "01234567890", balance: 0 }
+            ];
+            window.suppliers = JSON.parse(localStorage.getItem(prefix + "suppliers")) || [
+                { id: 1, name: "مورد المواد", phone: "01567890123", balance: 0 }
+            ];
+            window.inventory = JSON.parse(localStorage.getItem(prefix + "inventory")) || [
+                { id: 1, name: "منتج أ", quantity: 100, price: 50, totalValue: 5000 }
+            ];
+        }
 
-        // دوال الحفظ والتحميل
-        function saveData(key, data) { localStorage.setItem(key, JSON.stringify(data)); }
-        function loadData(key) { return JSON.parse(localStorage.getItem(key)); }
-
-        function saveAllData() {
-            saveData("journalEntries", journalEntries);
-            saveData("customers", customers);
-            saveData("suppliers", suppliers);
-            saveData("inventory", inventory);
-            showMessage("تم حفظ جميع البيانات تلقائياً", "success");
+        function saveUserData() {
+            if (!currentUser) return;
+            const prefix = `user_${currentUser.username}_`;
+            localStorage.setItem(prefix + "journalEntries", JSON.stringify(window.journalEntries));
+            localStorage.setItem(prefix + "customers", JSON.stringify(window.customers));
+            localStorage.setItem(prefix + "suppliers", JSON.stringify(window.suppliers));
+            localStorage.setItem(prefix + "inventory", JSON.stringify(window.inventory));
         }
 
         function showMessage(msg, type = "success") {
@@ -192,12 +298,14 @@
         function calculateBalances() {
             let balances = {};
             accounts.forEach(acc => { balances[acc.id] = { debit: 0, credit: 0 }; });
-            journalEntries.forEach(entry => {
-                entry.lines.forEach(line => {
-                    balances[line.accountId].debit += line.debit;
-                    balances[line.accountId].credit += line.credit;
+            if (window.journalEntries) {
+                window.journalEntries.forEach(entry => {
+                    entry.lines.forEach(line => {
+                        balances[line.accountId].debit += line.debit;
+                        balances[line.accountId].credit += line.credit;
+                    });
                 });
-            });
+            }
             let finalBalances = {};
             for (let acc of accounts) {
                 let debit = balances[acc.id].debit;
@@ -215,6 +323,7 @@
 
         // تصدير PDF
         function exportToPDF(elementId, filename) {
+            if (!permissions[currentUser.role].canExport) { showMessage("ليس لديك صلاحية للتصدير", "error"); return; }
             const element = document.getElementById(elementId);
             if (!element) { showMessage("لا يوجد بيانات للتصدير", "error"); return; }
             const opt = { margin: [0.5, 0.5, 0.5, 0.5], filename: `${filename}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } };
@@ -224,6 +333,7 @@
 
         // تصدير Excel
         function exportToExcel(data, filename) {
+            if (!permissions[currentUser.role].canExport) { showMessage("ليس لديك صلاحية للتصدير", "error"); return; }
             const ws = XLSX.utils.json_to_sheet(data);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
@@ -266,13 +376,13 @@
                     <div class="stat-card" style="background:linear-gradient(135deg,#fa709a,#fee140)"><i class="fas fa-money-bill-wave"></i><div class="number">${netIncome.toFixed(2)}</div><div>صافي الربح</div></div>
                 </div>
                 <div class="card" id="dashboard-report">
-                    <div class="card-header"><h3>أخر القيود المحاسبية</h3><div><button onclick="exportToPDF('dashboard-report', 'dashboard_report')" class="btn-success" style="margin-left:5px"><i class="fas fa-file-pdf"></i> PDF</button></div></div>
+                    <div class="card-header"><h3>أخر القيود المحاسبية</h3><div>${permissions[currentUser.role].canExport ? '<button onclick="exportToPDF(\'dashboard-report\', \'dashboard_report\')" class="btn-success"><i class="fas fa-file-pdf"></i> PDF</button>' : ''}</div></div>
                     <div class="table-responsive"><table><thead><tr><th>التاريخ</th><th>البيان</th><th>عدد السطور</th></tr></thead><tbody>
-                        ${journalEntries.slice(-5).reverse().map(entry => `<tr><td>${entry.date}</td><td>${entry.description}</td><td>${entry.lines.length}</td></tr>`).join("")}
-                        ${journalEntries.length === 0 ? '<tr><td colspan="3">لا توجد قيود بعد</td></tr>' : ""}
+                        ${window.journalEntries.slice(-5).reverse().map(entry => `<tr><td>${entry.date}</td><td>${entry.description}</td><td>${entry.lines.length}</td></tr>`).join("")}
+                        ${window.journalEntries.length === 0 ? '<tr><td colspan="3">لا توجد قيود بعد</td></tr>' : ""}
                     </tbody></table></div>
                 </div>
-                <div class="card"><div class="card-header"><h3>معلومات الشركة</h3></div><p><strong>عدد القيود:</strong> ${journalEntries.length}</p><p><strong>عدد العملاء:</strong> ${customers.length}</p><p><strong>عدد الموردين:</strong> ${suppliers.length}</p></div>
+                <div class="card"><div class="card-header"><h3>معلومات النظام</h3></div><p><strong>مرحباً ${currentUser.name}</strong> - ${currentUser.roleName}</p><p><strong>عدد القيود:</strong> ${window.journalEntries.length}</p><p><strong>عدد العملاء:</strong> ${window.customers.length}</p><p><strong>عدد الموردين:</strong> ${window.suppliers.length}</p></div>
             `;
             document.getElementById("mainContent").innerHTML = html;
         }
@@ -281,7 +391,7 @@
             const grouped = { asset: [], liability: [], equity: [], income: [], expense: [] };
             accounts.forEach(acc => { if (!acc.isGroup && grouped[acc.type]) grouped[acc.type].push(acc); });
             const typeNames = { asset: "الأصول", liability: "الخصوم", equity: "حقوق الملكية", income: "الإيرادات", expense: "المصروفات" };
-            let html = `<div class="card" id="chart-report"><div class="card-header"><h3>شجرة الحسابات</h3><div><button onclick="exportToPDF('chart-report', 'chart_of_accounts')" class="btn-success"><i class="fas fa-file-pdf"></i> PDF</button></div></div>`;
+            let html = `<div class="card" id="chart-report"><div class="card-header"><h3>شجرة الحسابات</h3><div>${permissions[currentUser.role].canExport ? '<button onclick="exportToPDF(\'chart-report\', \'chart_of_accounts\')" class="btn-success"><i class="fas fa-file-pdf"></i> PDF</button>' : ''}</div></div>`;
             for (let [type, name] of Object.entries(typeNames)) {
                 html += `<div class="tree-item" style="background:#e3f2fd;"><i class="fas fa-folder-open"></i> ${name}</div>`;
                 grouped[type].forEach(acc => { html += `<div class="tree-node"><div class="tree-item"><i class="fas fa-book"></i> ${acc.code} - ${acc.name}</div></div>`; });
@@ -292,6 +402,10 @@
 
         let entryRows = [{ accountId: "", debit: 0, credit: 0 }];
         function renderJournalEntry() {
+            if (!permissions[currentUser.role].canAddEntry) {
+                document.getElementById("mainContent").innerHTML = `<div class="card"><div class="card-header"><h3>غير مسموح</h3></div><p>ليس لديك صلاحية لإدخال القيود المحاسبية</p></div>`;
+                return;
+            }
             const accountOptions = accounts.filter(a => !a.isGroup).map(a => `<option value="${a.id}">${a.code} - ${a.name}</option>`).join("");
             const rowsHtml = entryRows.map((row, idx) => `<div class="form-row" data-row="${idx}"><div class="form-group"><select class="account-select" data-idx="${idx}">${accountOptions}</select></div><div class="form-group"><input type="number" class="debit-input" data-idx="${idx}" placeholder="مدين" value="${row.debit}"></div><div class="form-group"><input type="number" class="credit-input" data-idx="${idx}" placeholder="دائن" value="${row.credit}"></div><div class="form-group"><button onclick="removeEntryRow(${idx})" class="btn-danger">✖</button></div></div>`).join("");
             const html = `<div class="card"><div class="card-header"><h3>إدخال قيد يومية</h3></div><div class="form-group"><label>التاريخ</label><input type="date" id="entryDate" value="${new Date().toISOString().split('T')[0]}"></div><div class="form-group"><label>البيان</label><input type="text" id="entryDesc" placeholder="وصف القيد"></div><div id="entryRowsContainer">${rowsHtml}</div><button onclick="addEntryRow()" class="btn-success"><i class="fas fa-plus"></i> إضافة سطر</button><button onclick="saveJournalEntry()" style="margin-right:10px"><i class="fas fa-save"></i> حفظ القيد</button></div>`;
@@ -314,10 +428,10 @@
                     totalDebit += row.debit; totalCredit += row.credit;
                 }
             });
-            if (lines.length === 0) { showMessage("أضف سطر واحد", "error"); return; }
+            if (lines.length === 0) { showMessage("أضف سطر واحد على الأقل", "error"); return; }
             if (Math.abs(totalDebit - totalCredit) > 0.01) { showMessage("مجموع المدين لا يساوي مجموع الدائن", "error"); return; }
-            journalEntries.push({ id: journalEntries.length + 1, date, description, lines });
-            saveAllData();
+            window.journalEntries.push({ id: window.journalEntries.length + 1, date, description, lines });
+            saveUserData();
             showMessage("تم حفظ القيد بنجاح");
             entryRows = [{ accountId: "", debit: 0, credit: 0 }];
             renderJournalEntry();
@@ -336,7 +450,7 @@
                     trialData.push({ code: acc.code, name: acc.name, debit: debitVal, credit: creditVal });
                 }
             });
-            let html = `<div class="card" id="trial-report"><div class="card-header"><h3>ميزان المراجعة</h3><div><button onclick="exportToPDF('trial-report', 'trial_balance')" class="btn-success"><i class="fas fa-file-pdf"></i> PDF</button><button onclick="exportToExcel(${JSON.stringify(trialData).replace(/"/g, '&quot;')}, 'trial_balance')" class="btn-warning" style="margin-right:5px"><i class="fas fa-file-excel"></i> Excel</button></div></div><div class="table-responsive"><table><thead><tr><th>رقم الحساب</th><th>اسم الحساب</th><th>مدين</th><th>دائن</th></tr></thead><tbody>`;
+            let html = `<div class="card" id="trial-report"><div class="card-header"><h3>ميزان المراجعة</h3><div>${permissions[currentUser.role].canExport ? '<button onclick="exportToPDF(\'trial-report\', \'trial_balance\')" class="btn-success"><i class="fas fa-file-pdf"></i> PDF</button><button onclick="exportToExcel(' + JSON.stringify(trialData).replace(/"/g, '&quot;') + ', \'trial_balance\')" class="btn-warning" style="margin-right:5px"><i class="fas fa-file-excel"></i> Excel</button>' : ''}</div></div><div class="table-responsive"><table><thead><tr><th>رقم الحساب</th><th>اسم الحساب</th><th>مدين</th><th>دائن</th></tr></thead><tbody>`;
             trialData.forEach(row => { html += `<tr><td>${row.code}</td><td>${row.name}</td><td>${row.debit.toFixed(2)}</td><td>${row.credit.toFixed(2)}</td></tr>`; });
             html += `<tr style="background:#ffe0b3"><td colspan="2">المجموع</td><td>${totalDebit.toFixed(2)}</td><td>${totalCredit.toFixed(2)}</td></tr></tbody></table></div></div>`;
             document.getElementById("mainContent").innerHTML = html;
@@ -360,8 +474,8 @@
             const totalRevenues = revenues.reduce((s, r) => s + r.amount, 0);
             const totalExpenses = expenses.reduce((s, e) => s + e.amount, 0);
             const netIncome = totalRevenues - totalExpenses;
-            let html = `<div class="card" id="income-report"><div class="card-header"><h3>قائمة الدخل</h3><div><button onclick="exportToPDF('income-report', 'income_statement')" class="btn-success"><i class="fas fa-file-pdf"></i> PDF</button><button onclick="exportToExcel([${JSON.stringify(revenues).replace(/"/g, '&quot;')}, ${JSON.stringify(expenses).replace(/"/g, '&quot;')}], 'income_statement')" class="btn-warning" style="margin-right:5px"><i class="fas fa-file-excel"></i> Excel</button></div></div>`;
-            html += `<h4>الإيرادات</h4><div class="table-responsive"><table><thead><tr><th>البيان</th><th>المبلغ</th></tr></thead><tbody>${revenues.map(r => `<tr><td>${r.name}</td><td>${r.amount.toFixed(2)}</td></tr>`).join("")}<tr style="background:#e3f2fd"><td><strong>إجمالي الإيرادات</strong></td><td><strong>${totalRevenues.toFixed(2)}</strong></td></tr></tbody></table></div>`;
+            let html = `<div class="card" id="income-report"><div class="card-header"><h3>قائمة الدخل</h3><div>${permissions[currentUser.role].canExport ? '<button onclick="exportToPDF(\'income-report\', \'income_statement\')" class="btn-success"><i class="fas fa-file-pdf"></i> PDF</button>' : ''}</div></div>`;
+            html += `<h4>الإيرادات</h4><div class="table-responsive"><tr><thead><tr><th>البيان</th><th>المبلغ</th></tr></thead><tbody>${revenues.map(r => `<tr><td>${r.name}</td><td>${r.amount.toFixed(2)}</td></tr>`).join("")}<tr style="background:#e3f2fd"><td><strong>إجمالي الإيرادات</strong></td><td><strong>${totalRevenues.toFixed(2)}</strong></td></tr></tbody></table></div>`;
             html += `<h4>المصروفات</h4><div class="table-responsive"><table><thead><tr><th>البيان</th><th>المبلغ</th></tr></thead><tbody>${expenses.map(e => `<tr><td>${e.name}</td><td>${e.amount.toFixed(2)}</td></tr>`).join("")}<tr style="background:#e3f2fd"><td><strong>إجمالي المصروفات</strong></td><td><strong>${totalExpenses.toFixed(2)}</strong></td></tr><tr style="background:#ffe0b3"><td><strong>صافي الربح</strong></td><td><strong>${netIncome.toFixed(2)}</strong></td></tr></tbody></table></div></div>`;
             document.getElementById("mainContent").innerHTML = html;
         }
@@ -401,10 +515,10 @@
                 }
             });
             totalEquity += totalRevenues - totalExpenses;
-            let html = `<div class="card" id="balance-report"><div class="card-header"><h3>المركز المالي</h3><div><button onclick="exportToPDF('balance-report', 'balance_sheet')" class="btn-success"><i class="fas fa-file-pdf"></i> PDF</button></div></div>`;
+            let html = `<div class="card" id="balance-report"><div class="card-header"><h3>المركز المالي</h3><div>${permissions[currentUser.role].canExport ? '<button onclick="exportToPDF(\'balance-report\', \'balance_sheet\')" class="btn-success"><i class="fas fa-file-pdf"></i> PDF</button>' : ''}</div></div>`;
             html += `<h4>الأصول</h4><div class="table-responsive"><table><thead><tr><th>البيان</th><th>المبلغ</th></tr></thead><tbody>${assets.map(a => `<tr><td>${a.name}</td><td>${a.amount.toFixed(2)}</td></tr>`).join("")}<tr style="background:#e3f2fd"><td><strong>إجمالي الأصول</strong></td><td><strong>${totalAssets.toFixed(2)}</strong></td></tr></tbody></table></div>`;
             html += `<h4>الخصوم</h4><div class="table-responsive"><table><thead><tr><th>البيان</th><th>المبلغ</th></tr></thead><tbody>${liabilities.map(l => `<tr><td>${l.name}</td><td>${l.amount.toFixed(2)}</td></tr>`).join("")}<tr style="background:#e3f2fd"><td><strong>إجمالي الخصوم</strong></td><td><strong>${totalLiabilities.toFixed(2)}</strong></td></tr></tbody></table></div>`;
-            html += `<h4>حقوق الملكية</h4><div class="table-responsive"><table><thead><tr><th>البيان</th><th>المبلغ</th></tr></thead><tbody>${equities.map(e => `<tr><td>${e.name}</td><td>${e.amount.toFixed(2)}</td></tr>`).join("")}<tr><td>صافي الربح</td><td>${(totalRevenues - totalExpenses).toFixed(2)}</td></tr><tr style="background:#ffe0b3"><td><strong>إجمالي حقوق الملكية</strong></td><td><strong>${totalEquity.toFixed(2)}</strong></td></tr><tr style="background:#e3f2fd"><td><strong>الخصوم + حقوق الملكية</strong></td><td><strong>${(totalLiabilities + totalEquity).toFixed(2)}</strong></td></tr></tbody></table></div></div>`;
+            html += `<h4>حقوق الملكية</h4><div class="table-responsive"><table><thead><tr><th>البيان</th><th>المبلغ</th></tr></thead><tbody>${equities.map(e => `<tr><td>${e.name}</td><td>${e.amount.toFixed(2)}</td></tr>`).join("")}<tr><td>صافي الربح</td><td>${(totalRevenues - totalExpenses).toFixed(2)}</td></tr><tr style="background:#ffe0b3"><td><strong>إجمالي حقوق الملكية</strong></td><td><strong>${totalEquity.toFixed(2)}</strong></td></tr><tr style="background:#e3f2fd"><td><strong>الخصوم + حقوق الملكية</strong></td><td><strong>${(totalLiabilities + totalEquity).toFixed(2)}</strong></td></tr></tbody>}</div></div>`;
             document.getElementById("mainContent").innerHTML = html;
         }
 
@@ -418,17 +532,97 @@
                 }
             });
             let html = `<div class="card"><div class="card-header"><h3>التقارير المتقدمة</h3></div>`;
-            html += `<div class="stats-grid"><button onclick="exportToExcel(${JSON.stringify(trialData).replace(/"/g, '&quot;')}, 'all_accounts')" class="btn-success"><i class="fas fa-file-excel"></i> تصدير جميع الحسابات إلى Excel</button>`;
-            html += `<button onclick="exportToPDF('dashboard-report', 'full_report')" class="btn-warning"><i class="fas fa-file-pdf"></i> تصدير التقرير الكامل PDF</button></div>`;
+            if (permissions[currentUser.role].canExport) {
+                html += `<div class="stats-grid"><button onclick="exportToExcel(${JSON.stringify(trialData).replace(/"/g, '&quot;')}, 'all_accounts')" class="btn-success"><i class="fas fa-file-excel"></i> تصدير جميع الحسابات إلى Excel</button>`;
+                html += `<button onclick="exportToPDF('dashboard-report', 'full_report')" class="btn-warning"><i class="fas fa-file-pdf"></i> تصدير التقرير الكامل PDF</button></div>`;
+            }
             html += `<div class="card" id="reports-summary"><h4>ملخص القيود</h4><div class="table-responsive"><table><thead><tr><th>التاريخ</th><th>البيان</th><th>عدد السطور</th></tr></thead><tbody>`;
-            journalEntries.forEach(entry => { html += `<tr><td>${entry.date}</td><td>${entry.description}</td><td>${entry.lines.length}</td></tr>`; });
-            html += `</tbody></table></div></div></div>`;
+            window.journalEntries.forEach(entry => { html += `<tr><td>${entry.date}</td><td>${entry.description}</td><td>${entry.lines.length}</td></tr>`; });
+            html += `</tbody>}</div></div></div>`;
+            document.getElementById("mainContent").innerHTML = html;
+        }
+
+        function renderUsersManagement() {
+            if (!permissions[currentUser.role].canManageUsers) {
+                document.getElementById("mainContent").innerHTML = `<div class="card"><div class="card-header"><h3>غير مسموح</h3></div><p>ليس لديك صلاحية لإدارة المستخدمين</p></div>`;
+                return;
+            }
+            let html = `<div class="card"><div class="card-header"><h3><i class="fas fa-users-cog"></i> إدارة المستخدمين</h3><button onclick="showAddUserForm()" class="btn-success"><i class="fas fa-user-plus"></i> إضافة مستخدم</button></div>
+            <div class="table-responsive"><table><thead><tr><th>اسم المستخدم</th><th>الاسم</th><th>الدور</th><th>الصلاحية</th><th></th></tr></thead><tbody>`;
+            users.forEach(user => {
+                html += `<tr><td>${user.username}</td><td>${user.name}</td><td>${user.roleName}</td><td>${user.role === 'admin' ? 'كاملة' : (user.role === 'accountant' ? 'إدخال قيود وتقارير' : 'عرض فقط')}</td>
+                <td>${user.username !== currentUser.username ? `<button onclick="deleteUser(${user.id})" class="btn-danger">حذف</button>` : 'أنت'}</td></tr>`;
+            });
+            html += `</tbody></table></div></div><div id="addUserForm" style="display:none;" class="card"><h4>إضافة مستخدم جديد</h4><div class="form-row"><div class="form-group"><input type="text" id="newUsername" placeholder="اسم المستخدم"></div>
+            <div class="form-group"><input type="text" id="newName" placeholder="الاسم الكامل"></div><div class="form-group"><input type="password" id="newPassword" placeholder="كلمة المرور"></div>
+            <div class="form-group"><select id="newRole"><option value="accountant">محاسب</option><option value="viewer">مشاهد</option></select></div>
+            <div class="form-group"><button onclick="addUser()" class="btn-success">حفظ</button> <button onclick="hideAddUserForm()" class="btn-danger">إلغاء</button></div></div></div>`;
+            document.getElementById("mainContent").innerHTML = html;
+        }
+
+        function showAddUserForm() { document.getElementById("addUserForm").style.display = "block"; }
+        function hideAddUserForm() { document.getElementById("addUserForm").style.display = "none"; }
+        
+        function addUser() {
+            const username = document.getElementById("newUsername").value;
+            const name = document.getElementById("newName").value;
+            const password = document.getElementById("newPassword").value;
+            const role = document.getElementById("newRole").value;
+            if (!username || !name || !password) { showMessage("جميع الحقول مطلوبة", "error"); return; }
+            if (users.find(u => u.username === username)) { showMessage("اسم المستخدم موجود بالفعل", "error"); return; }
+            const roleName = role === "accountant" ? "محاسب" : "مشاهد";
+            users.push({ id: users.length + 1, username, password, name, role, roleName });
+            localStorage.setItem("system_users", JSON.stringify(users));
+            showMessage("تم إضافة المستخدم بنجاح");
+            renderUsersManagement();
+        }
+        
+        function deleteUser(id) {
+            if (users.length <= 1) { showMessage("لا يمكن حذف المستخدم الوحيد", "error"); return; }
+            users = users.filter(u => u.id !== id);
+            localStorage.setItem("system_users", JSON.stringify(users));
+            showMessage("تم حذف المستخدم");
+            renderUsersManagement();
+        }
+
+        function renderHelp() {
+            const html = `
+                <div class="card">
+                    <div class="card-header"><h3><i class="fas fa-question-circle"></i> دليل استخدام النظام المحاسبي</h3></div>
+                    <div class="guide">
+                        <h4>📋 1. تسجيل الدخول</h4>
+                        <p>استخدم الحسابات التجريبية التالية:</p>
+                        <ul><li><strong>مدير (admin)</strong> - كلمة المرور: 123456 - صلاحيات كاملة</li>
+                        <li><strong>محاسب (accountant)</strong> - كلمة المرور: 123456 - يمكنه إدخال القيود وعمل التقارير</li>
+                        <li><strong>مشاهد (viewer)</strong> - كلمة المرور: 123456 - مشاهدة فقط</li></ul>
+                        
+                        <h4>📝 2. إدخال قيد محاسبي</h4>
+                        <ol><li>اختر "إدخال قيد" من القائمة الجانبية</li><li>حدد التاريخ والبيان</li><li>اختر الحساب واكتب المبلغ (مدين أو دائن)</li><li>أضف سطور أخرى عند الحاجة</li><li>تأكد من أن مجموع المدين = مجموع الدائن</li><li>اضغط "حفظ القيد"</li></ol>
+                        
+                        <h4>📊 3. عرض التقارير المالية</h4>
+                        <ol><li><strong>ميزان المراجعة</strong>: يعرض أرصدة جميع الحسابات</li><li><strong>قائمة الدخل</strong>: تعرض الإيرادات والمصروفات وصافي الربح</li><li><strong>المركز المالي</strong>: يعرض الأصول والخصوم وحقوق الملكية</li></ol>
+                        
+                        <h4>📎 4. تصدير التقارير</h4>
+                        <p>اضغط على زر <strong>PDF</strong> لتحويل التقرير إلى ملف PDF، أو زر <strong>Excel</strong> لتصدير البيانات إلى Excel.</p>
+                        
+                        <h4>👥 5. إدارة المستخدمين (للمدير فقط)</h4>
+                        <ol><li>من القائمة الجانبية اختر "إدارة المستخدمين"</li><li>يمكنك إضافة مستخدمين جدد أو حذف مستخدمين موجودين</li><li>كل مستخدم له بياناته المستقلة (قيود محاسبية منفصلة)</li></ol>
+                        
+                        <h4>💾 6. حفظ البيانات</h4>
+                        <p>البيانات تُحفظ تلقائياً في متصفحك. كل مستخدم له قاعدة بيانات مستقلة.</p>
+                        
+                        <h4>⚠️ 7. ملاحظات مهمة</h4>
+                        <ul><li>القيد يجب أن يكون متوازناً (المدين = الدائن)</li><li>لا يمكن تعديل أو حذف القيد بعد حفظه في هذه النسخة</li><li>لحذف جميع البيانات، امسح localStorage من المتصفح</li></ul>
+                    </div>
+                </div>
+            `;
             document.getElementById("mainContent").innerHTML = html;
         }
 
         function switchPage(page) {
             document.querySelectorAll(".sidebar-item").forEach(item => item.classList.remove("active"));
-            document.querySelector(`.sidebar-item[data-page="${page}"]`).classList.add("active");
+            const activeItem = document.querySelector(`.sidebar-item[data-page="${page}"]`);
+            if (activeItem) activeItem.classList.add("active");
             if (page === "dashboard") renderDashboard();
             else if (page === "chart-of-accounts") renderChartOfAccounts();
             else if (page === "journal-entry") renderJournalEntry();
@@ -436,13 +630,59 @@
             else if (page === "income-statement") renderIncomeStatement();
             else if (page === "balance-sheet") renderBalanceSheet();
             else if (page === "reports") renderReports();
+            else if (page === "users") renderUsersManagement();
+            else if (page === "help") renderHelp();
         }
 
+        // تحميل المستخدمين من localStorage
+        function loadUsers() {
+            const savedUsers = localStorage.getItem("system_users");
+            if (savedUsers) users = JSON.parse(savedUsers);
+        }
+
+        function attemptLogin() {
+            const username = document.getElementById("loginUsername").value;
+            const password = document.getElementById("loginPassword").value;
+            const user = users.find(u => u.username === username && u.password === password);
+            if (user) {
+                currentUser = user;
+                document.getElementById("loginContainer").style.display = "none";
+                document.getElementById("mainApp").style.display = "block";
+                document.getElementById("currentUserName").innerHTML = `<i class="fas fa-user"></i> ${user.name}`;
+                document.getElementById("currentUserRole").innerHTML = `<i class="fas fa-shield-alt"></i> ${user.roleName}`;
+                
+                // إظهار/إخفاء عنصر إدارة المستخدمين حسب الصلاحية
+                const usersMenuItem = document.getElementById("usersMenuItem");
+                if (usersMenuItem) {
+                    usersMenuItem.style.display = permissions[user.role].canManageUsers ? "flex" : "none";
+                }
+                
+                loadUserData();
+                renderDashboard();
+                showMessage(`مرحباً ${user.name}`);
+            } else {
+                document.getElementById("loginError").style.display = "block";
+            }
+        }
+
+        function logout() {
+            saveUserData();
+            currentUser = null;
+            document.getElementById("loginContainer").style.display = "flex";
+            document.getElementById("mainApp").style.display = "none";
+            document.getElementById("loginUsername").value = "";
+            document.getElementById("loginPassword").value = "";
+            document.getElementById("loginError").style.display = "none";
+        }
+
+        loadUsers();
         document.querySelectorAll(".sidebar-item").forEach(item => { item.addEventListener("click", () => switchPage(item.dataset.page)); });
         document.getElementById("menuToggle").addEventListener("click", () => { document.getElementById("sidebar").classList.toggle("open"); });
+        
         window.addEntryRow = addEntryRow; window.removeEntryRow = removeEntryRow; window.saveJournalEntry = saveJournalEntry;
         window.exportToPDF = exportToPDF; window.exportToExcel = exportToExcel;
-        renderDashboard();
+        window.showAddUserForm = showAddUserForm; window.hideAddUserForm = hideAddUserForm;
+        window.addUser = addUser; window.deleteUser = deleteUser;
     </script>
 </body>
 </html>
